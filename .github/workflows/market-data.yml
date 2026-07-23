@@ -14,18 +14,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch ASTS daily close from Stooq
+      - name: Fetch ASTS quote (Cboe delayed, Yahoo fallback)
         run: |
           set -euo pipefail
-          csv=$(curl -fsSL "https://stooq.com/q/l/?s=asts.us&f=sd2t2ohlcv&h&e=csv" | tail -n 1)
-          echo "stooq row: $csv"
-          px=$(echo "$csv" | cut -d, -f7)
-          qdate=$(echo "$csv" | cut -d, -f2)
-          # sanity: a real price, not N/D or a glitch
+          px=""; qdate=""
+          if q=$(curl -fsSL --max-time 30 "https://cdn.cboe.com/api/global/delayed_quotes/quotes/ASTS.json"); then
+            px=$(echo "$q" | jq -r 'if (.data.close // 0) > 0 then .data.close else .data.current_price end')
+            qdate=$(echo "$q" | jq -r '.timestamp' | cut -d' ' -f1)
+            src="cboe delayed quote"
+          else
+            y=$(curl -fsSL --max-time 30 -H "User-Agent: Mozilla/5.0" \
+              "https://query1.finance.yahoo.com/v8/finance/chart/ASTS?interval=1d&range=1d")
+            px=$(echo "$y" | jq -r '.chart.result[0].meta.regularMarketPrice')
+            qdate=$(date -u +%F)
+            src="yahoo chart api"
+          fi
+          echo "px=$px date=$qdate via $src"
+          # sanity: a real price, not null or a glitch
           awk -v p="$px" 'BEGIN { if (p+0 < 1 || p+0 > 10000) { print "implausible price: " p; exit 1 } }'
           mcap=$(awk -v p="$px" 'BEGIN { printf "%.2f", p*388.12/1000 }')
-          printf '{"px": %s, "mcap": %s, "date": "%s", "source": "stooq.com daily close via GitHub Action", "shares_note": "mcap = px x 388.12M shares (Jul 2026 count)"}\n' \
-            "$px" "$mcap" "$qdate" > market.json
+          printf '{"px": %s, "mcap": %s, "date": "%s", "source": "%s via GitHub Action", "shares_note": "mcap = px x 388.12M shares (Jul 2026 count)"}\n' \
+            "$px" "$mcap" "$qdate" "$src" > market.json
 
       - name: Commit if changed
         run: |
