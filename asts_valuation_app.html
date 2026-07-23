@@ -415,10 +415,12 @@
     </div>
 
     <div class="panel">
-      <h3>What "one steady-state year" means</h3>
-      <p>The model <b>freezes a single representative year in the future</b> — the constellation built to your satellite setting, subscribers fully ramped, replacement launches running at cruise — and values that snapshot with market multiples. It deliberately skips the path to get there: no discounting of the in-between years, no execution risk, no dilution along the way.</p>
-      <p>That isn't an oversight — it's what the multiples are for. A 28× P/E on a mature year already embeds a market's judgment about growth and risk; layering a DCF on top would double-count. The division of labor here: <b>this model prices the destination; the Financing tab models the road</b> — year-by-year launches, subscriber ramp, and whether cash on hand survives the trip.</p>
-      <p>The one discipline it imposes: when you compare the implied price to today's $61.95, remember the implied price belongs to that future steady-state year. The gap between the two is exactly the growth, time, and execution risk you're being paid to underwrite.</p>
+      <h3>What "one steady-state year" means — and why two prices</h3>
+      <p>The model <b>freezes a single representative year in the future</b> — constellation built to your satellite setting, subscribers fully ramped, replacement launches at cruise — and values that snapshot with market multiples. The two hero numbers are that <b>same destination priced from two different dates</b>:</p>
+      <p><b>Steady-state price (<span class="mono" id="uw-ss-px"></span>)</b> is what the shares are worth <i>standing in that future year</i>, when the company actually is earning the modeled net income. <b>Value today (<span class="mono" id="uw-pv-px"></span>)</b> is what the same shares are worth <i>right now</i> — when the real company has ~14 satellites, essentially no subscribers, and the modeled year is still <span class="mono" id="uw-ny"></span> years of execution away. <b>PV does not assume any slider is true yet</b> — not the satellites, not the subscribers. The sliders describe the finish line; the adoption inputs say how far away it is and what you charge for the wait.</p>
+      <p>Run it forward to see why both prices must exist. Buy at PV and, if the thesis lands on schedule, the price climbs the discount staircase: <span class="mono" id="uw-stair"></span> — each step is exactly +<span class="mono" id="uw-disc2"></span>%, and that climb <i>is</i> your return. Pay the steady-state price today instead and a perfect outcome earns you 0% for the whole wait, while you carry launch, adoption, and funding risk. Same reason a $1,000 zero-coupon bond maturing in 6 years trades near $430, and a condo costs less pre-construction than move-in ready: <b>a dollar you must wait for, and might not get, is worth less than a dollar in hand.</b></p>
+      <p>The market's lens: at today's actual $<span class="mono" id="uw-mktpx"></span>, reaching the steady-state price on schedule would compound at roughly <b><span class="mono" id="uw-irr"></span>%/yr</b>. That's the disagreement you're underwriting — either the market demands far more than your <span class="mono" id="uw-disc3"></span>% hurdle, or it believes in a smaller destination, a longer road, or more dilution.</p>
+      <p>Division of labor: <b>this tab prices the destination; the Financing tab models the road</b> — year-by-year launches, the subscriber S-curve, and whether cash survives the trip. And the multiples stay clean: a 28× P/E already embeds mature-year growth expectations, so growth lives in the timeline and discount rate, never double-counted into the multiple.</p>
     </div>
 
     <div class="panel">
@@ -1213,6 +1215,18 @@ function renderUnderwriting(m){
   document.getElementById("uw-ebm").textContent = fN(S.gm - S.opex, 1);
   document.getElementById("uw-gm").textContent = fN(S.gm, 0);
   document.getElementById("uw-op").textContent = fN(S.opex, 1);
+  // steady-state vs PV panel live numbers
+  document.getElementById("uw-ss-px").textContent = fPx(m.pxB) + "/sh";
+  document.getElementById("uw-pv-px").textContent = fPx(m.pxToday) + "/sh";
+  document.getElementById("uw-ny").textContent = fN(S.nyears,0);
+  const stair = [];
+  for (let t = 0; t <= S.nyears; t++) stair.push(fPx(m.pxToday * Math.pow(1+S.disc/100, t)));
+  document.getElementById("uw-stair").textContent = stair.join(" → ");
+  document.getElementById("uw-disc2").textContent = fN(S.disc,1);
+  document.getElementById("uw-disc3").textContent = fN(S.disc,1);
+  document.getElementById("uw-mktpx").textContent = REF.px.toFixed(2);
+  const irr = m.pxB > 0 && REF.px > 0 ? (Math.pow(m.pxB/REF.px, 1/S.nyears) - 1) * 100 : NaN;
+  document.getElementById("uw-irr").textContent = isFinite(irr) ? fN(irr,0) : "—";
   // adoption panel live numbers
   document.getElementById("uw-pv-math").textContent =
     `${fPx(m.pxB)} ÷ (1+${fN(S.disc,1)}%)^${fN(S.nyears,0)} = ${fPx(m.pxToday)}/sh (${fN(m.pxToday/REF.px,1)}× today's $${REF.px.toFixed(2)})`;
