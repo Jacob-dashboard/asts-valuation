@@ -529,7 +529,7 @@
 <footer>
   Mechanics: revenue = subs × ARPU × 12 × revenue&nbsp;share; eq_gross = GP×mult − net&nbsp;debt; eq_ebitda = EBITDA×mult − net&nbsp;debt; eq_pe = NI×mult (already equity); blend = 50/35/15 net/EBITDA/gross.
   Base case calibrated to the prior model's anchors: $60B revenue → $42B gross profit → $34.2B EBITDA → $22B net income.
-  MNO D2D revenue only — no government/FirstNet, no IoT. Share count 388M and the $61.95 / $24.0B market reference are the Jul 22, 2026 close (stockanalysis.com) and do not auto-update. Coverage guidance and balance-sheet figures per the sources on the Underwriting tab. Not investment advice.
+  MNO D2D revenue only — no government/FirstNet, no IoT. Share count 388M is the Jul 22, 2026 figure (stockanalysis.com; update on filings). The market-reference price is the Jul 22, 2026 close as a baked-in fallback — on the GitHub Pages site it auto-refreshes each weekday close via a GitHub Action (Stooq daily quote). Coverage guidance and balance-sheet figures per the sources on the Underwriting tab. Not investment advice.
 </footer>
 </div>
 <div class="tooltip" id="tip"></div>
@@ -559,8 +559,23 @@ const CONVERTS = [
 ];
 const CONVERT_SHARES = CONVERTS.reduce((a,c)=>a + c.prin/c.conv, 0);   // ≈27.7M shares
 
-/* market reference — static snapshot, Jul 22 2026 close (stockanalysis.com) */
+/* market reference — baked-in snapshot (Jul 22, 2026 close, stockanalysis.com).
+   When served from GitHub Pages, market.json (refreshed each weekday close by a
+   GitHub Action) overrides this at load; elsewhere the snapshot stands. */
 const REF = {px: 61.95, mcap: 24.04, date: "Jul 22, 2026"};
+(async () => {
+  try {
+    const r = await fetch("market.json", {cache: "no-store"});
+    if (!r.ok) return;
+    const q = await r.json();
+    if (q.px > 1 && q.px < 10000){
+      REF.px = q.px;
+      REF.mcap = +(q.px * 388.12 / 1000).toFixed(2);
+      REF.date = q.date + " close (auto-updated)";
+      renderAll();
+    }
+  } catch (e) { /* file:// or artifact sandbox — keep the baked-in snapshot */ }
+})();
 
 const GROUPS = [
   ["Demand", [

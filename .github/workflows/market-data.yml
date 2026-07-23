@@ -1,0 +1,40 @@
+name: Update market data
+
+on:
+  schedule:
+    - cron: "30 21 * * 1-5"   # weekdays 21:30 UTC — after the 4pm ET close year-round
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch ASTS daily close from Stooq
+        run: |
+          set -euo pipefail
+          csv=$(curl -fsSL "https://stooq.com/q/l/?s=asts.us&f=sd2t2ohlcv&h&e=csv" | tail -n 1)
+          echo "stooq row: $csv"
+          px=$(echo "$csv" | cut -d, -f7)
+          qdate=$(echo "$csv" | cut -d, -f2)
+          # sanity: a real price, not N/D or a glitch
+          awk -v p="$px" 'BEGIN { if (p+0 < 1 || p+0 > 10000) { print "implausible price: " p; exit 1 } }'
+          mcap=$(awk -v p="$px" 'BEGIN { printf "%.2f", p*388.12/1000 }')
+          printf '{"px": %s, "mcap": %s, "date": "%s", "source": "stooq.com daily close via GitHub Action", "shares_note": "mcap = px x 388.12M shares (Jul 2026 count)"}\n' \
+            "$px" "$mcap" "$qdate" > market.json
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet market.json; then
+            echo "market.json unchanged — nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add market.json
+          git commit -m "market data: ASTS $(jq -r .date market.json) close \$$(jq -r .px market.json)"
+          git push
