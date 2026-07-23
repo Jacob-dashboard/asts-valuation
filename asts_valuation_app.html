@@ -1,0 +1,1354 @@
+<title>ASTS Valuation Console</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#eceff4; --panel:#ffffff; --panel2:#f2f4f8; --line:#c6cedb;
+    --ink:#0e1218; --ink2:#3d4657; --ink3:#6b7488;
+    --accent:#b97a00; --accent-soft:#fdf3df;
+    --slider:#2a78d6; --slider-ink:#ffffff;
+    --s-gross:#e87ba4; --s-ebitda:#2a78d6; --s-pe:#1baf7a; --s-blend:#eda100;
+    --wf-dec:#93627e; --cell-input:#2a78d6;
+    --cov1:#cfe3f7; --cov2:#8fc0ee; --cov3:#4a94dd; --cov4:#1f5fa8; --cov-ink:#0e1218;
+    --good:#1a7f4b; --warn:#b45309; --bad:#c2402a;
+    --good-bg:#e4f3ea; --warn-bg:#fbeedb; --bad-bg:#f9e6e1;
+    --grid:#e2e6ee; --track:#d3d9e3;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme: dark;
+      --bg:#0b101a; --panel:#151d2b; --panel2:#1c2534; --line:#33405a;
+      --ink:#f0f4fa; --ink2:#aab6cc; --ink3:#75819a;
+      --accent:#e8ac45; --accent-soft:#2a2413;
+      --slider:#3987e5; --slider-ink:#ffffff;
+      --s-gross:#d55181; --s-ebitda:#3987e5; --s-pe:#199e70; --s-blend:#c98500;
+      --wf-dec:#8a5a75; --cell-input:#5ba3f5;
+      --cov1:#17395c; --cov2:#1f4f80; --cov3:#2a6cae; --cov4:#3987e5; --cov-ink:#f0f4fa;
+      --good:#3dbb7e; --warn:#e0a33d; --bad:#e06a51;
+      --good-bg:#15291f; --warn-bg:#2a2413; --bad-bg:#2c1a15;
+      --grid:#212b3e; --track:#2c3852;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0b101a; --panel:#151d2b; --panel2:#1c2534; --line:#33405a;
+    --ink:#f0f4fa; --ink2:#aab6cc; --ink3:#75819a;
+    --accent:#e8ac45; --accent-soft:#2a2413;
+    --slider:#3987e5; --slider-ink:#ffffff;
+    --s-gross:#d55181; --s-ebitda:#3987e5; --s-pe:#199e70; --s-blend:#c98500;
+    --wf-dec:#8a5a75; --cell-input:#5ba3f5;
+    --cov1:#17395c; --cov2:#1f4f80; --cov3:#2a6cae; --cov4:#3987e5; --cov-ink:#f0f4fa;
+    --good:#3dbb7e; --warn:#e0a33d; --bad:#e06a51;
+    --good-bg:#15291f; --warn-bg:#2a2413; --bad-bg:#2c1a15;
+    --grid:#212b3e; --track:#2c3852;
+  }
+  :root[data-theme="light"]{
+    color-scheme: light;
+    --bg:#eceff4; --panel:#ffffff; --panel2:#f2f4f8; --line:#c6cedb;
+    --ink:#0e1218; --ink2:#3d4657; --ink3:#6b7488;
+    --accent:#b97a00; --accent-soft:#fdf3df;
+    --slider:#2a78d6; --slider-ink:#ffffff;
+    --s-gross:#e87ba4; --s-ebitda:#2a78d6; --s-pe:#1baf7a; --s-blend:#eda100;
+    --wf-dec:#93627e; --cell-input:#2a78d6;
+    --cov1:#cfe3f7; --cov2:#8fc0ee; --cov3:#4a94dd; --cov4:#1f5fa8; --cov-ink:#0e1218;
+    --good:#1a7f4b; --warn:#b45309; --bad:#c2402a;
+    --good-bg:#e4f3ea; --warn-bg:#fbeedb; --bad-bg:#f9e6e1;
+    --grid:#e2e6ee; --track:#d3d9e3;
+  }
+  *{box-sizing:border-box; margin:0}
+  [hidden]{display:none !important;}   /* author display rules must never resurrect a hidden view */
+  html,body{background:var(--bg); color:var(--ink);
+    font:14px/1.5 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;}
+  .mono{font-family:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+    font-variant-numeric:tabular-nums;}
+  .wrap{max-width:1240px; margin:0 auto; padding:20px 20px 60px;}
+
+  header.top{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;
+    justify-content:space-between; padding:10px 2px 16px;}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700;}
+  h1{font-family:Futura,"Century Gothic","Avenir Next",-apple-system,sans-serif;
+    font-size:clamp(22px,3.4vw,32px); letter-spacing:.01em; text-wrap:balance;}
+  .subnote{color:var(--ink3); font-size:12px; max-width:46ch;}
+  .presets{display:flex; gap:8px;}
+  .presets button{font:600 12px/1 -apple-system,"Segoe UI",sans-serif; letter-spacing:.06em;
+    text-transform:uppercase; padding:9px 14px; border-radius:5px; cursor:pointer;
+    border:1.5px solid var(--line); background:var(--panel); color:var(--ink2);}
+  .presets button:hover{border-color:var(--accent); color:var(--ink);}
+  button:focus-visible, input:focus-visible, .tab:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* ---------- view tabs (sticky — each view is its own page) ---------- */
+  .tabs{display:flex; gap:4px; border-bottom:2.5px solid var(--ink); padding:8px 2px 0;
+    position:sticky; top:0; background:var(--bg); z-index:30; overflow-x:auto;}
+  .tab{font:700 12px/1 -apple-system,"Segoe UI",sans-serif; letter-spacing:.1em; text-transform:uppercase;
+    padding:11px 18px 10px; border:none; background:transparent; color:var(--ink3); cursor:pointer;
+    border-radius:7px 7px 0 0; white-space:nowrap;}
+  .tab:hover{color:var(--ink);}
+  .tab.active{background:var(--ink); color:var(--bg);}
+
+  main{display:grid; grid-template-columns:330px 1fr; gap:22px; margin-top:22px;}
+  @media (max-width:960px){ main{grid-template-columns:1fr;} }
+
+  /* ---------- input console ---------- */
+  .console{display:flex; flex-direction:column; gap:16px;}
+  .igroup{background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:14px 16px 16px; box-shadow:0 1px 3px rgba(10,15,26,.07);}
+  .igroup h2, .igroup summary{font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink);
+    padding-bottom:8px; margin-bottom:8px; border-bottom:1.5px solid var(--line); font-weight:800;}
+  details.igroup summary{cursor:pointer; list-style:none; margin-bottom:0; padding-bottom:0; border-bottom:none;}
+  details.igroup[open] summary{margin-bottom:8px; padding-bottom:8px; border-bottom:1.5px solid var(--line);}
+  details.igroup summary::before{content:"▸ ";}
+  details.igroup[open] summary::before{content:"▾ ";}
+  .ctl{padding:8px 0 5px;}
+  .ctl label{font-size:12.5px; color:var(--ink2); font-weight:600; display:block;}
+  .ctl .rng-note{font-size:10.5px; color:var(--ink3); margin-top:-1px;}
+  .slider{position:relative; padding-top:25px;}
+  .bubble{position:absolute; top:0; left:calc(7.5px + var(--p,0)*(100% - 15px));
+    transform:translateX(-50%); background:var(--slider); color:var(--slider-ink);
+    font-size:10.5px; font-weight:700; line-height:1; padding:4px 8px; border-radius:10px;
+    white-space:nowrap; pointer-events:none; z-index:2;}
+  .bubble::after{content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:4px solid transparent; border-top-color:var(--slider);}
+  input[type=range]{width:100%; height:20px; appearance:none; -webkit-appearance:none;
+    background:transparent; cursor:pointer; display:block;}
+  input[type=range]::-webkit-slider-runnable-track{height:5px; border-radius:3px;
+    background:linear-gradient(to right, var(--slider) calc(var(--p,0)*100%), var(--track) 0);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:16px; height:16px;
+    border-radius:50%; background:var(--panel); border:3.5px solid var(--slider); margin-top:-5.5px;}
+  input[type=range]::-moz-range-track{height:5px; border-radius:3px; background:var(--track);}
+  input[type=range]::-moz-range-progress{height:5px; border-radius:3px; background:var(--slider);}
+  input[type=range]::-moz-range-thumb{width:11px; height:11px; border-radius:50%;
+    background:var(--panel); border:3.5px solid var(--slider);}
+
+  /* ---------- shared panels ---------- */
+  .out{display:flex; flex-direction:column; gap:18px; min-width:0;}
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  @media (max-width:700px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  .kpi{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
+    box-shadow:0 1px 3px rgba(10,15,26,.07);}
+  .kpi .k{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink3); font-weight:700;}
+  .kpi .v{font-size:22px; font-weight:700; margin-top:2px;}
+  .kpi .d{font-size:11px; color:var(--ink3); margin-top:1px;}
+  .kpi.hero{background:var(--accent-soft); border:1.5px solid var(--accent);}
+  .kpi.hero .k{color:var(--accent);}
+  .kpi.hero .v{font-size:26px;}
+
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:16px 18px; box-shadow:0 1px 3px rgba(10,15,26,.07);}
+  .panel h3{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink);
+    font-weight:800; margin-bottom:4px;}
+  .panel .ph-sub{font-size:12px; color:var(--ink3); margin-bottom:12px;}
+
+  .lenses{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  @media (max-width:700px){ .lenses{grid-template-columns:1fr;} }
+  .lens{border:1px solid var(--line); border-radius:7px; padding:12px 14px;
+    border-top:3.5px solid var(--line); background:var(--panel2);}
+  .lens .name{font-size:12px; font-weight:700;}
+  .lens .anchor{font-size:11px; color:var(--ink3); margin-bottom:8px;}
+  .lens .eq{font-size:19px; font-weight:700;}
+  .lens .px{font-size:12.5px; color:var(--ink2);}
+  .lens .why{font-size:11px; color:var(--ink3); margin-top:8px; line-height:1.45;}
+
+  table{border-collapse:collapse; width:100%; font-size:12.5px;}
+  th{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink3);
+    text-align:right; padding:6px 8px; border-bottom:1.5px solid var(--line); white-space:nowrap;}
+  th:first-child, td:first-child{text-align:left;}
+  td{padding:6px 8px; text-align:right; border-bottom:1px solid var(--grid); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  .tblwrap{overflow-x:auto;}
+  .neg{color:var(--bad);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600;
+    padding:7px 11px; border-radius:5px; border:1.5px solid;}
+  .chip.ok{color:var(--good); background:var(--good-bg); border-color:var(--good);}
+  .chip.warn{color:var(--warn); background:var(--warn-bg); border-color:var(--warn);}
+  .chip.bad{color:var(--bad); background:var(--bad-bg); border-color:var(--bad);}
+
+  svg text{font-family:ui-monospace,"SF Mono",Consolas,monospace; font-variant-numeric:tabular-nums;}
+  .tooltip{position:fixed; pointer-events:none; z-index:40; background:var(--panel);
+    border:1px solid var(--line); border-radius:5px; padding:7px 10px; font-size:12px;
+    box-shadow:0 4px 14px rgba(0,0,0,.22); display:none; max-width:250px;}
+  .legend{display:flex; flex-wrap:wrap; gap:14px; font-size:11.5px; color:var(--ink2); margin-top:8px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .sw{width:10px; height:10px; border-radius:2px; display:inline-block;}
+
+  /* constellation dashboard */
+  .meter{margin-bottom:14px;}
+  .meter .mrow{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px;}
+  .meter .mlabel{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); font-weight:700;}
+  .meter .mval{font-size:13px; font-weight:700;}
+  .meter .bar{position:relative; height:10px; border-radius:5px; background:var(--track); overflow:visible;}
+  .meter .fill{position:absolute; left:0; top:0; bottom:0; border-radius:5px; background:var(--slider);}
+  .meter .tick{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--ink3); border-radius:1px;}
+  .meter .ticklab{position:absolute; top:14px; font-size:10px; color:var(--ink3); transform:translateX(-50%); white-space:nowrap;}
+  /* coverage roadmap */
+  .roadrow{display:grid; grid-template-columns:78px 1fr auto; gap:14px; align-items:start;
+    padding:13px 0; border-bottom:1px solid var(--grid);}
+  .roadrow:last-child{border-bottom:none;}
+  .roadnum{text-align:right; color:var(--slider); font-weight:800; font-size:21px; line-height:1.1;}
+  .roadnum .u{display:block; font-size:9px; color:var(--ink3); letter-spacing:.09em;
+    text-transform:uppercase; font-weight:700;}
+  .roadbody h4{font-size:13px; margin-bottom:2px;}
+  .roadbody p{font-size:12px; color:var(--ink3); line-height:1.5; max-width:64ch;}
+  .roadbody .src{font-size:10.5px; color:var(--ink3); font-style:italic;}
+  .chip.off{color:var(--ink3); background:var(--panel2); border-color:var(--line);}
+  .chip.here{color:var(--accent); background:var(--accent-soft); border-color:var(--accent);}
+
+  .statgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px;}
+  @media (max-width:820px){ .statgrid{grid-template-columns:repeat(2,1fr);} }
+  .scard{background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:10px 12px;}
+  .scard .k{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); font-weight:700;}
+  .scard .v{font-size:17px; font-weight:700; margin-top:2px;}
+  .scard .d{font-size:10.5px; color:var(--ink3);}
+
+  /* financing + underwriting */
+  .fin-grid{display:grid; grid-template-columns:330px 1fr; gap:22px; margin-top:22px;}
+  @media (max-width:960px){ .fin-grid{grid-template-columns:1fr;} }
+  .uw{margin-top:22px; display:flex; flex-direction:column; gap:18px; max-width:940px;}
+  .uw .panel p{font-size:13px; color:var(--ink2); line-height:1.65; margin-bottom:10px; max-width:78ch;}
+  .uw .panel p:last-child{margin-bottom:0;}
+  .uw .panel p b{color:var(--ink);}
+  .uw .formula{font-size:12px; background:var(--panel2); border:1px solid var(--line); border-radius:5px;
+    padding:8px 12px; margin:8px 0 12px; overflow-x:auto; white-space:nowrap;}
+  .uw ul{font-size:13px; color:var(--ink2); line-height:1.65; padding-left:20px; margin-bottom:10px;}
+  .stagecards{display:flex; flex-direction:column; gap:12px;}
+  .stagecard{border:1px solid var(--line); border-left:4px solid var(--slider); border-radius:7px;
+    padding:12px 16px; background:var(--panel2);}
+  .stagecard h4{font-size:13px; margin-bottom:2px;}
+  .stagecard .meta{font-size:11px; color:var(--ink3); margin-bottom:6px;}
+  .stagecard p{font-size:12.5px !important;}
+  .srcs{font-size:12px; color:var(--ink3); line-height:1.7;}
+  .srcs a{color:var(--slider);}
+  .howto{font-size:12.5px; color:var(--ink2); line-height:1.6; background:var(--panel2);
+    border-left:3.5px solid var(--slider); border-radius:5px; padding:10px 14px; margin-bottom:14px;}
+
+  /* spreadsheet view */
+  #view-sheet{margin-top:22px; display:flex; flex-direction:column; gap:20px;}
+  .sheetbar{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;}
+  .sheetbar .note{font-size:12.5px; color:var(--ink2); max-width:72ch;}
+  .dlbtn{font:700 12px/1 -apple-system,"Segoe UI",sans-serif; letter-spacing:.06em; text-transform:uppercase;
+    padding:11px 16px; border-radius:5px; cursor:pointer; border:none;
+    background:var(--accent); color:#fff;}
+  :root[data-theme="dark"] .dlbtn{color:#14100a;}
+  @media (prefers-color-scheme: dark){ :root:where(:not([data-theme="light"])) .dlbtn{color:#14100a;} }
+  .dlbtn:hover{filter:brightness(1.08);}
+  .sheet{background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    box-shadow:0 1px 3px rgba(10,15,26,.07); overflow:hidden;}
+  .sheettab{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase; background:var(--ink); color:var(--bg);
+    padding:7px 16px; border-radius:0 0 7px 0;}
+  .sheet .inner{padding:12px 16px 16px;}
+  .sheet .sub{font-size:11.5px; color:var(--ink3); margin:6px 0 10px;}
+  table.grid{font-size:12px;}
+  table.grid th{background:var(--panel2); color:var(--ink3); font-weight:700; text-align:center;
+    border:1px solid var(--grid); padding:4px 8px; letter-spacing:.04em;}
+  table.grid td{border:1px solid var(--grid); padding:5px 9px;}
+  table.grid td.rn{background:var(--panel2); color:var(--ink3); text-align:center; font-size:10.5px; width:34px;}
+  table.grid td.sec{background:var(--panel2); font-weight:800; font-size:10.5px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink2);}
+  table.grid td.inp{color:var(--cell-input); font-weight:700; background:var(--accent-soft);}
+  table.grid td.fx{color:var(--ink3); font-size:11px; text-align:left;}
+  table.grid td.bold{font-weight:700;}
+
+  footer{margin-top:26px; font-size:11.5px; color:var(--ink3); line-height:1.6; max-width:88ch;}
+  @media (prefers-reduced-motion:no-preference){
+    .kpi .v, .lens .eq{transition:color .15s;}
+    .meter .fill{transition:width .2s;}
+  }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div>
+    <div class="eyebrow">AST SpaceMobile · MNO direct-to-device only</div>
+    <h1>ASTS Valuation Console</h1>
+    <div class="subnote">Steady-state year at the chosen scale. Three lenses — EV/Gross Profit, EV/EBITDA, P/E — plus the 50/35/15 blend that leans on the only lens that sees replenishment capex.</div>
+  </div>
+  <div class="presets" role="group" aria-label="Scenario presets">
+    <button id="p-bear">Bear</button>
+    <button id="p-base">Base</button>
+    <button id="p-bull">Bull</button>
+  </div>
+</header>
+
+<div class="tabs" role="tablist">
+  <button class="tab active" id="tab-console" role="tab" aria-selected="true">Console</button>
+  <button class="tab" id="tab-fin" role="tab" aria-selected="false">Financing</button>
+  <button class="tab" id="tab-uw" role="tab" aria-selected="false">Underwriting</button>
+  <button class="tab" id="tab-sheet" role="tab" aria-selected="false">Spreadsheet</button>
+</div>
+
+<!-- ================= CONSOLE ================= -->
+<main id="view-console">
+  <aside class="console" id="console"></aside>
+
+  <section class="out">
+    <div class="kpis">
+      <div class="kpi"><div class="k">Revenue</div><div class="v mono" id="k-rev"></div><div class="d">$B / yr</div></div>
+      <div class="kpi"><div class="k">EBITDA</div><div class="v mono" id="k-ebitda"></div><div class="d">$B / yr</div></div>
+      <div class="kpi hero"><div class="k">Blend price · steady-state yr</div><div class="v mono" id="k-px"></div><div class="d" id="k-px-d"></div></div>
+      <div class="kpi hero"><div class="k">Value today (PV)</div><div class="v mono" id="k-pv"></div><div class="d" id="k-pv-d"></div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Three lenses → blended equity value</h3>
+      <div class="ph-sub">Each lens anchors on a different line of the P&L — that's the whole reason they diverge. Full rationale on the Underwriting tab.</div>
+      <div class="lenses">
+        <div class="lens" style="border-top-color:var(--s-gross)">
+          <div class="name">EV / Gross Profit</div>
+          <div class="anchor mono" id="l-g-a"></div>
+          <div class="eq mono" id="l-g-eq"></div>
+          <div class="px mono" id="l-g-px"></div>
+          <div class="why">Most generous — values the business before any operating or capital costs.</div>
+        </div>
+        <div class="lens" style="border-top-color:var(--s-ebitda)">
+          <div class="name">EV / EBITDA</div>
+          <div class="anchor mono" id="l-e-a"></div>
+          <div class="eq mono" id="l-e-eq"></div>
+          <div class="px mono" id="l-e-px"></div>
+          <div class="why">Captures opex but sits above D&A — blind to the satellite replenishment drag.</div>
+        </div>
+        <div class="lens" style="border-top-color:var(--s-pe)">
+          <div class="name">P/E · net income</div>
+          <div class="anchor mono" id="l-p-a"></div>
+          <div class="eq mono" id="l-p-eq"></div>
+          <div class="px mono" id="l-p-px"></div>
+          <div class="why">The only lens that absorbs D&A, interest, and tax — it sees the constellation replenishment cost.</div>
+        </div>
+      </div>
+      <div id="barchart" style="margin-top:14px"></div>
+    </div>
+
+    <div class="panel">
+      <h3>P&amp;L waterfall</h3>
+      <div class="ph-sub">From revenue to net income, $B per year — hover any bar for the driver.</div>
+      <div id="waterfall"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Constellation economics</h3>
+      <div class="ph-sub">Replacement is a forever cost — the P/E lens is the only one paying for it.</div>
+      <div id="constel"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Coverage roadmap — per AST's own guidance</h3>
+      <div class="ph-sub">Four milestones, each one a company statement about what that fleet size delivers. Your satellite slider decides how far down this road the valuation lives.</div>
+      <div id="covtrack"></div>
+      <div id="covroad"></div>
+      <div class="ph-sub" style="margin:16px 0 6px">What each checkpoint fleet could serve at your current ARPU and capacity settings:</div>
+      <div class="tblwrap"><table id="covtable"></table></div>
+    </div>
+
+    <div class="panel">
+      <h3>Blend price vs constellation build-out</h3>
+      <div class="ph-sub">Implied blend price as satellites scale 45 → 248, with subscribers capped by fleet capacity. The marker is your current setting.</div>
+      <div id="curvechart"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--s-blend)"></span>Blend price ($/sh)</span>
+        <span><span class="sw" style="background:var(--accent); border-radius:50%"></span>Current setting</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Value along the adoption curve</h3>
+      <div class="ph-sub" id="adopt-sub"></div>
+      <div id="adoptchart"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--s-blend)"></span>Frozen-year blend price at that year's subscribers</span>
+        <span><span class="sw" style="background:var(--s-pe)"></span>Same value discounted back to today (the underwriting line)</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Sanity checks</h3>
+      <div class="ph-sub">Guardrails so the revenue asked of each satellite stays physically honest.</div>
+      <div class="chips" id="sanity"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Stages — what could it trade at across the life span?</h3>
+      <div class="ph-sub">Stage assumptions with stage-appropriate multiples — the reasoning behind each row lives on the Underwriting tab.</div>
+      <div class="tblwrap"><table id="stages"></table></div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= FINANCING ================= -->
+<section id="view-fin" hidden>
+  <div class="fin-grid">
+    <aside class="console" id="fin-console"></aside>
+    <div class="out">
+      <div class="kpis" id="fin-kpis"></div>
+      <div class="panel">
+        <h3>Cash flow through the build-out</h3>
+        <div class="ph-sub" id="fin-sub"></div>
+        <div class="howto"><b>How to read it — the y-axis is billions of dollars.</b>
+          Each <b style="color:var(--s-ebitda)">bar</b> is the cash the business generates or burns in that year: revenue minus operating costs, taxes, and every launch (new satellites and replacements). The <b style="color:var(--s-blend)">line</b> is the bank account — it starts at your cash-on-hand and moves each year by exactly that year's bar, which is why its slope steepens as the bars grow. Line climbing = the build funds itself. Line crossing below $0 = the moment outside financing is required, and how far below is how much.</div>
+        <div id="finchart"></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--s-ebitda)"></span>Cash generated that year (+)</span>
+          <span><span class="sw" style="background:var(--bad)"></span>Cash burned that year (−)</span>
+          <span><span class="sw" style="background:var(--s-blend)"></span>Cash in the bank (starts at your cash-on-hand)</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Year by year</h3>
+        <div class="ph-sub">Fleet, demand ramp, and cash generation. Capex = new launches + replacing the existing fleet every lifespan.</div>
+        <div class="tblwrap"><table id="fintable"></table></div>
+      </div>
+      <div class="panel">
+        <h3>Reading this honestly</h3>
+        <div class="ph-sub" style="margin-bottom:0" id="fin-notes"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= UNDERWRITING ================= -->
+<section id="view-uw" hidden>
+  <div class="uw">
+    <div class="panel">
+      <h3>What this model underwrites</h3>
+      <p>One <b>steady-state year</b> of AST SpaceMobile's MNO direct-to-device business at whatever scale you set — not a DCF, not a path. The bet being priced: AST becomes the space-based cellular layer that mobile network operators resell to their own subscribers. Revenue is deliberately narrow — <b>MNO D2D only</b>: no government/FirstNet, no IoT, no gateway or spectrum side-deals.</p>
+      <div class="formula mono">revenue = subscribers(B) × ARPU($/mo) × 12 × revenue_share%</div>
+      <p>Every subscriber pays a few dollars a month, AST keeps its share, and the P&amp;L waterfall (gross margin → opex → D&amp;A → interest → tax) turns that into three different "earnings" a market could price.</p>
+    </div>
+
+    <div class="panel">
+      <h3>What "one steady-state year" means</h3>
+      <p>The model <b>freezes a single representative year in the future</b> — the constellation built to your satellite setting, subscribers fully ramped, replacement launches running at cruise — and values that snapshot with market multiples. It deliberately skips the path to get there: no discounting of the in-between years, no execution risk, no dilution along the way.</p>
+      <p>That isn't an oversight — it's what the multiples are for. A 28× P/E on a mature year already embeds a market's judgment about growth and risk; layering a DCF on top would double-count. The division of labor here: <b>this model prices the destination; the Financing tab models the road</b> — year-by-year launches, subscriber ramp, and whether cash on hand survives the trip.</p>
+      <p>The one discipline it imposes: when you compare the implied price to today's $61.95, remember the implied price belongs to that future steady-state year. The gap between the two is exactly the growth, time, and execution risk you're being paid to underwrite.</p>
+    </div>
+
+    <div class="panel">
+      <h3>AST's own margin guidance — vs what this model assumes</h3>
+      <p>On the Q4 2025 earnings call, management said flow-through margins and operating leverage <b>"could contribute to an EBITDA margin in the 90% area or higher"</b> at scale, with high service gross margins already observed. The logic: a satellite network's costs are mostly fixed — once the constellation exists, each incremental subscriber's revenue flows through at very high margin.</p>
+      <p>This model deliberately underwrites <b>well below</b> that: at base settings, 70% gross margin minus 13% opex = a <b>57% EBITDA margin</b> — roughly two-thirds of what the company itself guides to. Even the slider ceiling (70% GM, 5% opex → 65%) can't reach the guided 90%. That gap is margin of safety, not a forecast disagreement: if management is right about 90%+, the base case's $34.2B EBITDA on $60B revenue would be closer to $54B, and every lens re-rates upward. You're pricing the business as a decent telecom, while the company pitches it as a software-margin toll road.</p>
+      <div class="formula mono">AST guidance: ~90%+ EBITDA margin at scale · this model: <span id="uw-ebm"></span>% (GM <span id="uw-gm"></span>% − opex <span id="uw-op"></span>%)</div>
+      <p style="font-size:11.5px; color:var(--ink3)">Source: Q4 2025 earnings call transcript (Motley Fool, Mar 2026) — link under Sources below.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Adoption &amp; the growth premium — without double counting</h3>
+      <p>Subscribers don't appear on day one — they adopt over years. The obvious fix, juicing the multiples for "growth," would <b>double count</b>: a 28× P/E already embeds a market's growth expectation for a mature business. So the model keeps growth out of the multiples and puts it where it belongs — in <b>time</b>:</p>
+      <div class="formula mono">value_today = steady-state blend price ÷ (1 + discount)^years-to-target</div>
+      <p>An S-curve (slow start, steep middle, saturating top — how every network technology has actually adopted) says <b>when</b> the subscriber target arrives; the discount rate charges you for waiting and for execution risk along the way. At your current settings: <span class="mono" id="uw-pv-math"></span>.</p>
+      <p><b>Why the early-stage numbers stop being absurd.</b> Frozen at 45 satellites, 100M subs and $2.50 ARPU, the model prints <span class="mono" id="uw-ex-frozen"></span> — technically true for that year, useless for underwriting, because nobody owning the stock at 45 satellites is pricing that year forever. With adoption underwriting, that same moment is priced as the path to your subscriber target: <span class="mono" id="uw-ex-pv"></span> today. The frozen number stays visible (it's the honest snapshot); the PV number is the one to compare against the market.</p>
+      <p>The stage table now carries this too: each stage has an <b>ETA</b> (editable assumption of when it arrives) and a <b>PV today</b> column — its then-price discounted back. Note how the Mature stage, 9 years out, is worth <i>less today</i> than the Worldwide stage at year 6 despite the bigger fleet economics: time value eats the difference. That's the discipline the discount rate buys.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Dilution from the converts — what full conversion costs you</h3>
+      <p>ASTS has four convertible series outstanding. If <b>every dollar converted to stock</b>, share count rises by only ~<span class="mono" id="uw-cvt-tot"></span>M shares — about <b>+7%</b> on 388M — because each raise priced conversion at a 20% premium and wrapped it in a capped call:</p>
+      <div class="tblwrap" style="margin-bottom:12px"><table id="uw-cvt"></table></div>
+      <p>The <b>Dilution group</b> on the Console has two sliders. <b>"Converts settled in shares"</b> walks between the two worlds: 0% = everything cash-settled or repaid (the company has repurchased converts before — $296.5M in Feb 2026 — and holds the option to settle the 2034 notes in cash); 100% = all four series become stock. At full conversion the diluted count is <span class="mono" id="uw-effsh"></span>M and the base blend price moves by roughly −7%. The capped calls (up to $120.12–$149.20) further offset the economic dilution between conversion and cap prices — the slider models gross share settlement, so it's the conservative end. The readout under each slider shows the resulting share count as you drag.</p>
+      <p><b>"Future dilution beyond converts"</b> is the second slider: extra shares from raises that haven't happened yet — stock comp, ATM offerings, equity funding for Block 3, whatever comes. It scales the 388M base directly (10% = +38.8M shares). History says assume something: share count grew ~18% in the year to mid-2026. Default is 0% so the base case stays anchored to known securities — dial it up to underwrite management's appetite.</p>
+      <p style="font-size:11.5px; color:var(--ink3)">One caveat: if the notes convert it's because the stock is far above the conversion prices — i.e., dilution happens only in the scenarios where the thesis is working. Debt that self-extinguishes into a winning position is the cheapest financing there is.</p>
+    </div>
+
+    <div class="panel">
+      <h3>The three lenses — and why they disagree</h3>
+      <p><b style="color:var(--s-gross)">1 · EV / Gross Profit at 11×.</b> Anchors on gross profit, before any operating or capital cost exists. This is how pre-scale infrastructure gets pitched — "look at the unit economics." It is the most generous lens <i>by construction</i>, and it is blind to everything that makes a satellite business hard.</p>
+      <div class="formula mono">eq_gross = gross_profit × 11× − net_debt</div>
+      <p><b style="color:var(--s-ebitda)">2 · EV / EBITDA at 16×.</b> Anchors on EBITDA — it absorbs the cost of running the business but sits <i>above the D&amp;A line</i>, so it never sees that the asset generating the revenue burns up in the atmosphere every 5–7 years. For a company whose fleet must be rebuilt continuously, EBITDA structurally overstates cash generation. 16× is a premium-growth-infrastructure multiple (towers/data centers trade high-teens on EBITDA at scale).</p>
+      <div class="formula mono">eq_ebitda = ebitda × 16× − net_debt</div>
+      <p><b style="color:var(--s-pe)">3 · P/E at 28×.</b> Anchors on net income — the only line that has already paid for depreciation (i.e., satellite replenishment), interest, and tax. It is the only honest lens for a business with a consumable fleet, which is why it produces the lowest value. 28× is a quality-growth-compounder multiple: rich versus telecom (~10–15×), justified only while growth stays high.</p>
+      <div class="formula mono">eq_pe = net_income × 28×   (already equity — no net-debt bridge)</div>
+      <p><b>The blend weights 50 / 35 / 15 (net / EBITDA / gross)</b> — deliberately majority-weighted to the P/E lens because it is the only one that doesn't pretend the capex isn't there. The gross-profit lens gets a token 15%: it represents how the market <i>actually prices</i> the story in euphoric stretches, so it earns a seat, but a small one.</p>
+      <div class="formula mono">blend = 0.50·eq_pe + 0.35·eq_ebitda + 0.15·eq_gross → <span id="uw-blend"></span> → <span id="uw-px"></span>/sh on <span id="uw-sh"></span>M shares</div>
+    </div>
+
+    <div class="panel">
+      <h3>Stage-by-stage underwriting</h3>
+      <p>Each stage pins fleet size to AST's own coverage guidance, sizes subscribers to what that fleet can physically serve, and assigns the multiple a market typically pays at that point in a growth story — hypergrowth premium early, telecom compression at maturity.</p>
+      <div class="stagecards" id="uw-stages"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Sanity checks — why they exist</h3>
+      <ul>
+        <li><b>Revenue per satellite</b> — divides total revenue by the fleet. Each satellite is a shared cell tower with finite beam capacity; if the model demands more than ~$250M/sat/yr, the physics, not the spreadsheet, is the constraint.</li>
+        <li><b>EV / Revenue vs telecom 2–4×</b> — mature carriers trade at 2–4× revenue. Anything above that is a growth premium you are consciously underwriting; the model shows you exactly how much.</li>
+        <li><b>Fleet capacity</b> — subscribers can't exceed satellites × capacity-per-satellite. Demand without coverage is not revenue. AST publishes no direct subs-per-satellite figure; what it does publish: 10 GHz of processing bandwidth per Block 2 BlueBird (10× Block 1), 40 MHz beams at up to 120 Mbps, and ~60 MNO agreements covering 3B+ subscribers. Dividing their own addressable base by their own constellation: 3B ÷ 248 ≈ <b>12M subscribers per satellite addressable</b> — the model's 8M/sat default sits ~35% below that, which is the right side to err on since "addressable" assumes every partner subscriber signs up.</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h3>Sources</h3>
+      <div class="srcs">
+        Coverage guidance: <a href="https://ast-science.com/faqs/">AST SpaceMobile FAQ</a> (45–60 satellites for continuous US &amp; select-market coverage; ~90 for continuous global service) ·
+        <a href="https://satnews.com/2026/04/21/fcc-grants-ast-spacemobile-authority-for-248-satellite-constellation-and-direct-to-cell-service/">SatNews — FCC grants 248-satellite constellation authority (Apr 2026)</a> ·
+        <a href="https://www.lightreading.com/satellite/ast-spacemobile-targets-intermittent-national-coverage-in-early-2026">Light Reading — intermittent US service targeted early 2026</a> ·
+        <a href="https://spacenews.com/fully-funded-key-market-coverage-plan-lifts-ast-spacemobile/">SpaceNews — fully funded key-market coverage plan</a> ·
+        <a href="https://www.fool.com/earnings/call-transcripts/2026/03/02/ast-spacemobile-asts-q4-2025-earnings-transcript/">Q4 2025 earnings transcript — EBITDA margin "in the 90% area or higher"</a><br>
+        Balance sheet &amp; market: <a href="https://www.stocktitan.net/sec-filings/ASTS/8-k-ast-space-mobile-inc-reports-material-event-75ced08d18a6.html">Q1 2026 8-K — ~$3.5B cash, ~$3.0B debt</a> ·
+        <a href="https://www.businesswire.com/news/home/20260721294685/en/AST-SpaceMobile-Announces-Completion-of-Private-Offering-of-$1.15-Billion-of-Convertible-Senior-Notes-Due-2034">$1.15B 1.625% converts due 2034 settled Jul 22, 2026 — pro forma cash $3.8B+ as of Jun 30 (incl. restricted)</a> ·
+        <a href="https://www.businesswire.com/news/home/20260715092237/en/AST-SpaceMobile-Announces-Pricing-of-Private-Offering-of-$1.0-Billion-of-Convertible-Senior-Notes-Due-2034-Effective-Conversion-Price-of-$149.20-per-Share-with-Capped-Call">2034 notes pricing — $79.57 conversion, $149.20 cap</a> ·
+        <a href="https://www.businesswire.com/news/home/20260212297381/en/AST-SpaceMobile-Announces-Pricing-of-Private-Offering-of-$1.0-Billion-of-Convertible-Senior-Notes-Due-2036">2036 notes — $1.0B, 2.25%, $116.30 conversion (Feb 2026)</a> ·
+        <a href="https://markets.financialcontent.com/pennwell.pennenergy/article/bizwire-2025-7-29-ast-spacemobile-announces-closing-of-private-offering-of-5750-million-of-convertible-senior-notes-due-2032">2032 notes — $575M, 2.375%, $72.07 conversion, $120.12 cap (Jul 2025)</a> ·
+        <a href="https://www.sec.gov/Archives/edgar/data/1780312/000149315226006223/form8-k.htm">Feb 2026 8-K — $296.5M convert repurchases ($46.5M of 4.25%s, $250M of 2.375%s)</a> ·
+        <a href="https://stockanalysis.com/stocks/asts/">stockanalysis.com — $61.95 / $24.04B / 388.12M shares (Jul 22, 2026)</a><br>
+        Capacity anchors: <a href="https://spacenews.com/indian-rocket-launches-ast-spacemobiles-next-gen-bluebird-6-satellite/">SpaceNews — 10 GHz processing per Block 2, 40 MHz beams, 120 Mbps</a> ·
+        <a href="https://www.businesswire.com/news/home/20260511685431/en/AST-SpaceMobile-Provides-Business-Update-and-First-Quarter-2026-Results">Q1 2026 update — ~60 MNO agreements covering 3B+ subscribers</a><br>
+        In-orbit fleet count (14): your own tracker at ~/Projects/asts-tracker, TLEs refreshed Jul 20, 2026. All other assumptions: model owner's framework.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SPREADSHEET ================= -->
+<section id="view-sheet" hidden>
+  <div class="sheetbar">
+    <div class="note">This mirrors the Excel workbook cell-for-cell — same formulas, computed live from your Console settings. The download ships the real workbook (base-case defaults, fully formula-driven, recalculates in Excel).</div>
+    <button class="dlbtn" id="dl-xlsx">⬇ Download workbook (.xlsx)</button>
+  </div>
+  <div class="sheet">
+    <span class="sheettab">Inputs</span>
+    <div class="inner">
+      <div class="sub">Blue cells are the workbook's editable inputs — in the app they follow the Console sliders.</div>
+      <div class="tblwrap"><table class="grid" id="sh-inputs"></table></div>
+    </div>
+  </div>
+  <div class="sheet">
+    <span class="sheettab">Model</span>
+    <div class="inner">
+      <div class="sub">One representative year. Column C shows the actual Excel formula behind each value.</div>
+      <div class="tblwrap"><table class="grid" id="sh-model"></table></div>
+    </div>
+  </div>
+  <div class="sheet">
+    <span class="sheettab">Stages</span>
+    <div class="inner">
+      <div class="sub">Stage assumptions (blue) with stage-appropriate multiples; operating economics pull from Inputs.</div>
+      <div class="tblwrap"><table class="grid" id="sh-stages"></table></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Mechanics: revenue = subs × ARPU × 12 × revenue&nbsp;share; eq_gross = GP×mult − net&nbsp;debt; eq_ebitda = EBITDA×mult − net&nbsp;debt; eq_pe = NI×mult (already equity); blend = 50/35/15 net/EBITDA/gross.
+  Base case calibrated to the prior model's anchors: $60B revenue → $42B gross profit → $34.2B EBITDA → $22B net income.
+  MNO D2D revenue only — no government/FirstNet, no IoT. Share count 388M and the $61.95 / $24.0B market reference are the Jul 22, 2026 close (stockanalysis.com) and do not auto-update. Coverage guidance and balance-sheet figures per the sources on the Underwriting tab. Not investment advice.
+</footer>
+</div>
+<div class="tooltip" id="tip"></div>
+
+<script>
+"use strict";
+/* ---------------- state ---------------- */
+const DEF = {
+  sats:248, subs:1000, arpu:5.00, share:100,
+  gm:70, opex:13, tax:21,
+  life:6, satcost:22.5, otherda:5.0,
+  netdebt:5.0, intrate:8, shares:388,
+  mg:11, me:16, mp:28, wn:50, we:35, wg:15,
+  maxrps:250, capsat:8, ww:248,
+  nyears:6, disc:15, dilution:100, futdil:0
+};
+const S = {...DEF};
+const FDEF = {satsNow:14, rate:48, cash:3.8};
+const F = {...FDEF};
+
+/* outstanding convertible notes as of Jul 22, 2026 — see Underwriting tab for sources */
+const CONVERTS = [
+  {name:"4.25% due 2032 (Jan '25)",  prin:3.5,  conv:27.00,  note:"de minimis — $456.5M repurchased Feb '26; conversion ≈$27 (est.)"},
+  {name:"2.375% due 2032 (Jul '25)", prin:325,  conv:72.07,  note:"$250M repurchased Feb '26 · capped call to $120.12"},
+  {name:"2.250% due 2036 (Feb '26)", prin:1000, conv:116.30, note:"8.5982 sh per $1,000"},
+  {name:"1.625% due 2034 (Jul '26)", prin:1150, conv:79.57,  note:"capped call to $149.20 · company may settle in cash"},
+];
+const CONVERT_SHARES = CONVERTS.reduce((a,c)=>a + c.prin/c.conv, 0);   // ≈27.7M shares
+
+/* market reference — static snapshot, Jul 22 2026 close (stockanalysis.com) */
+const REF = {px: 61.95, mcap: 24.04, date: "Jul 22, 2026"};
+
+const GROUPS = [
+  ["Demand", [
+    ["sats","Satellites in orbit",45,248,1,"45 commercial start · 248 = FCC-granted full constellation"],
+    ["subs","Subscribers (M)",100,2000,10,"100M – 2B"],
+    ["arpu","ARPU ($/sub/mo)",2.50,5.00,0.05,"range $2.50 – $5.00"],
+    ["share","Revenue share to ASTS (%)",30,100,1,"100% = ARPU is ASTS's cut"],
+  ]],
+  ["Adoption & time value", [
+    ["nyears","Years until subscriber target is reached",2,12,1,"S-curve adoption — the valued year arrives this far out"],
+    ["disc","Discount rate (%/yr)",8,25,0.5,"pulls the steady-state value back to today; 15% ≈ growth-equity hurdle"],
+  ]],
+  ["Operating economics", [
+    ["gm","Gross margin (%)",50,70,1,"range 50 – 70%"],
+    ["opex","Opex (% of revenue)",5,25,0.5,"13% reproduces base EBITDA"],
+    ["tax","Tax rate (%)",0,30,1,"US statutory 21%"],
+  ]],
+  ["Constellation", [
+    ["life","Satellite lifespan (yrs)",5,7,0.5,"range 5 – 7"],
+    ["satcost","Cost per sat incl. launch ($M)",20,25,0.5,"range $20 – 25M"],
+  ]],
+  ["Valuation", [
+    ["mg","EV / Gross Profit (×)",5,25,0.5,""],
+    ["me","EV / EBITDA (×)",8,30,0.5,""],
+    ["mp","P/E (×)",10,60,1,""],
+    ["wn","Weight: net income (%)",0,100,5,"blend leans on P/E"],
+    ["we","Weight: EBITDA (%)",0,100,5,""],
+    ["wg","Weight: gross profit (%)",0,100,5,""],
+    ["shares","Shares outstanding (M)",200,600,1,"388M actual Jul 22, 2026 (before dilution — see Dilution group below)"],
+  ]],
+  ["Dilution", [
+    ["dilution","Converts settled in shares (%)",0,100,5,""],
+    ["futdil","Future dilution beyond converts (%)",0,50,1,""],
+  ]],
+  ["ADV::Advanced — capital structure & guardrails", [
+    ["netdebt","Net debt ($B)",0,20,0.5,"steady-state assumption (today roughly net flat: $3.8B cash vs ~$4.1B debt)"],
+    ["intrate","Interest rate (%)",0,12,0.5,""],
+    ["otherda","Ground/other D&A at full scale ($B)",0,10,0.5,"calibration plug, scales with sats/248"],
+    ["maxrps","Max plausible rev/sat ($M/yr)",100,500,10,""],
+    ["capsat","Subscriber capacity per sat (M)",2,20,1,"no direct AST guidance — their ~60 MNO deals cover 3B+ subs ≈ 12M/sat addressable at 248; 8M is conservative"],
+  ]],
+];
+const FGROUPS = [
+  ["Build-out plan", [
+    ["satsNow","Satellites in orbit today",5,60,1,"14 per your tracker (TLEs Jul 20, 2026)"],
+    ["rate","Launch cadence (sats/yr)",12,96,4,"target fleet = Console satellite slider"],
+    ["cash","Cash on hand ($B)",0,8,0.25,"$3.8B+ pro forma as of Jun 30, 2026 incl. the $1.15B convert settled Jul 22 (co. statement; includes restricted cash)"],
+  ]],
+];
+
+const PRESETS = {
+  bear:{sats:110, subs:250, arpu:3.00, share:100, gm:55, opex:18, mg:8, me:11, mp:18},
+  base:{...DEF},
+  bull:{sats:248, subs:2000, arpu:5.00, share:100, gm:70, opex:11, mg:13, me:18, mp:32},
+};
+
+/* S-curve adoption: ~5% of target at year 0, ~95% at year N (logistic, midpoint N/2) */
+function adoptionSubs(t){
+  const N = S.nyears, k = 6/N, t0 = N/2;
+  return S.subs / (1 + Math.exp(-k*(t - t0)));
+}
+
+/* ---------------- model ---------------- */
+function model(p){
+  const rev = p.subs/1000 * p.arpu * 12 * p.share/100;          // $B
+  const gp = rev * p.gm/100;
+  const opex = rev * p.opex/100;
+  const ebitda = gp - opex;
+  const fleetDA = p.sats * p.satcost / p.life / 1000;
+  const otherDA = p.otherda * p.sats / p.ww;
+  const ebit = ebitda - fleetDA - otherDA;
+  const interest = p.netdebt * p.intrate/100;
+  const pretax = ebit - interest;
+  const ni = pretax > 0 ? pretax * (1 - p.tax/100) : pretax;
+  const eqG = gp * p.mg - p.netdebt;
+  const eqE = ebitda * p.me - p.netdebt;
+  const eqP = ni * p.mp;
+  const wsum = p.wn + p.we + p.wg || 1;
+  const blend = (eqP*p.wn + eqE*p.we + eqG*p.wg) / wsum;
+  const effSh = p.shares * (1 + p.futdil/100) + CONVERT_SHARES * p.dilution/100;
+  const px = b => b*1000/effSh;
+  const pvF = Math.pow(1 + p.disc/100, -p.nyears);
+  return {rev, gp, opex, ebitda, fleetDA, otherDA, ebit, interest, pretax, ni,
+    eqG, eqE, eqP, blend, effSh, pvF,
+    pxToday: px(blend)*pvF, eqToday: blend*pvF,
+    pxG:px(eqG), pxE:px(eqE), pxP:px(eqP), pxB:px(blend),
+    replSats:p.sats/p.life, replCapex:p.sats/p.life*p.satcost/1000,
+    toWW:Math.max(0,p.ww-p.sats), capexWW:Math.max(0,p.ww-p.sats)*p.satcost/1000,
+    book:p.sats*p.satcost/1000,
+    revPerSat:rev*1000/p.sats, revPerSat256:rev*1000/p.ww,
+    evRev:(blend+p.netdebt)/rev, capacity:p.sats*p.capsat};
+}
+
+/* ---------------- formatting ---------------- */
+const fB = v => (v<0?"−":"") + "$" + Math.abs(v).toLocaleString("en-US",{maximumFractionDigits:1,minimumFractionDigits:1}) + "B";
+const fPx = v => (v<0?"−":"") + "$" + Math.abs(v).toLocaleString("en-US",{maximumFractionDigits:0});
+const fM = v => "$" + v.toLocaleString("en-US",{maximumFractionDigits:0}) + "M";
+const fN = (v,d=1) => v.toLocaleString("en-US",{maximumFractionDigits:d});
+
+/* ---------------- input consoles ---------------- */
+const sliders = {};   // key -> input element; financing keys prefixed handled via same map
+function fmtVal(key){
+  const v = (key in S) ? S[key] : F[key];
+  if (key==="arpu") return "$"+v.toFixed(2);
+  if (key==="satcost") return "$"+fN(v,1)+"M";
+  if (["netdebt","otherda","cash"].includes(key)) return "$"+fN(v,2)+"B";
+  if (["share","gm","opex","tax","intrate","wn","we","wg","disc","dilution","futdil"].includes(key)) return fN(v,1)+"%";
+  if (key==="nyears") return fN(v,0)+" yrs";
+  if (["mg","me","mp"].includes(key)) return fN(v,1)+"×";
+  if (key==="maxrps") return "$"+fN(v,0)+"M";
+  if (["subs","shares"].includes(key)) return fN(v,0)+"M";
+  if (key==="capsat") return fN(v,0)+"M/sat";
+  if (key==="rate") return fN(v,0)+"/yr";
+  return fN(v, Number.isInteger(v)?0:1);
+}
+function buildConsole(el, groups, stateObj){
+  for (const [gname, ctls] of groups){
+    const adv = gname.startsWith("ADV::");
+    const g = document.createElement(adv ? "details" : "div");
+    g.className = "igroup";
+    g.innerHTML = adv ? `<summary>${gname.slice(5)}</summary>` : `<h2>${gname}</h2>`;
+    for (const [key,label,min,max,step,note] of ctls){
+      const d = document.createElement("div"); d.className = "ctl";
+      d.innerHTML = `<label for="in-${key}">${label}</label>
+        <div class="slider"><div class="bubble mono" id="out-${key}"></div>
+        <input type="range" id="in-${key}" min="${min}" max="${max}" step="${step}" value="${stateObj[key]}"
+          autocomplete="off" aria-label="${label}"></div><div class="rng-note" id="note-${key}">${note||""}</div>`;
+      g.appendChild(d);
+      const inp = d.querySelector("input");
+      inp.addEventListener("input", () => { stateObj[key] = parseFloat(inp.value); renderAll(); });
+      // wheel over a slider must scroll the page, not change the value
+      inp.addEventListener("wheel", e => { e.preventDefault(); window.scrollBy(0, e.deltaY); }, {passive:false});
+      sliders[key] = inp;
+    }
+    el.appendChild(g);
+  }
+}
+buildConsole(document.getElementById("console"), GROUPS, S);
+buildConsole(document.getElementById("fin-console"), FGROUPS, F);
+function syncBubbles(){
+  for (const k in sliders){
+    const inp = sliders[k];
+    const v = (k in S) ? S[k] : F[k];
+    const p = (v-inp.min)/(inp.max-inp.min || 1);
+    inp.parentElement.style.setProperty("--p", Math.max(0,Math.min(1,p)));
+    document.getElementById("out-"+k).textContent = fmtVal(k);
+  }
+}
+for (const id of ["p-bear","p-base","p-bull"]){
+  document.getElementById(id).addEventListener("click", () => {
+    Object.assign(S, PRESETS[id.slice(2)]);
+    for (const k in sliders) sliders[k].value = (k in S) ? S[k] : F[k];
+    renderAll();
+  });
+}
+
+/* ---------------- view tabs ---------------- */
+const views = {console:document.getElementById("view-console"), fin:document.getElementById("view-fin"),
+               uw:document.getElementById("view-uw"), sheet:document.getElementById("view-sheet")};
+const tabs = {console:document.getElementById("tab-console"), fin:document.getElementById("tab-fin"),
+              uw:document.getElementById("tab-uw"), sheet:document.getElementById("tab-sheet")};
+function showView(which){
+  for (const k in views){
+    views[k].hidden = k !== which;
+    tabs[k].classList.toggle("active", k === which);
+    tabs[k].setAttribute("aria-selected", k === which);
+  }
+  window.scrollTo(0,0);
+  renderAll();   // charts need layout to measure; re-render on switch
+}
+for (const k in tabs) tabs[k].addEventListener("click", () => showView(k));
+
+/* ---------------- tooltip ---------------- */
+const tip = document.getElementById("tip");
+function showTip(html, x, y){
+  tip.innerHTML = html; tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth;
+  tip.style.left = Math.min(x + pad, innerWidth - w - 8) + "px";
+  tip.style.top = (y + pad) + "px";
+}
+function hideTip(){ tip.style.display = "none"; }
+
+/* ---------------- console renderers ---------------- */
+function renderKPIs(m){
+  document.getElementById("k-rev").textContent = fB(m.rev);
+  document.getElementById("k-ebitda").textContent = fB(m.ebitda);
+  document.getElementById("k-px").textContent = fPx(m.pxB) + "/sh";
+  document.getElementById("k-px-d").textContent = "mkt cap " + fB(m.blend) + " · " + fN(m.effSh,0) + "M diluted sh";
+  const pv = document.getElementById("k-pv");
+  pv.textContent = fPx(m.pxToday) + "/sh"; pv.classList.toggle("neg", m.pxToday<0);
+  document.getElementById("k-pv-d").textContent = "steady-state ÷ (1+" + fN(S.disc,0) + "%)^" + fN(S.nyears,0) + " · " + fN(m.pxToday/REF.px,1) + "× today's $" + REF.px.toFixed(2);
+}
+function renderLenses(m){
+  const set = (id,t)=>document.getElementById(id).textContent=t;
+  set("l-g-a","anchors on GP "+fB(m.gp)+" × "+fN(S.mg,1)+"×");
+  set("l-g-eq",fB(m.eqG)); set("l-g-px",fPx(m.pxG)+"/sh");
+  set("l-e-a","anchors on EBITDA "+fB(m.ebitda)+" × "+fN(S.me,1)+"×");
+  set("l-e-eq",fB(m.eqE)); set("l-e-px",fPx(m.pxE)+"/sh");
+  set("l-p-a","anchors on NI "+fB(m.ni)+" × "+fN(S.mp,1)+"×");
+  set("l-p-eq",fB(m.eqP)); set("l-p-px",fPx(m.pxP)+"/sh");
+}
+
+/* ---- P&L waterfall chart ---- */
+function renderWaterfall(m){
+  const el = document.getElementById("waterfall");
+  if (views.console.hidden) return;
+  const cogs = m.rev - m.gp;
+  const da = m.fleetDA + m.otherDA;
+  const taxAmt = m.pretax > 0 ? m.pretax - m.ni : 0;
+  const steps = [
+    {n:"Revenue",  a:0,        b:m.rev,    t:"total", d:`${fN(S.subs,0)}M subs × $${S.arpu.toFixed(2)} × 12 × ${fN(S.share,0)}%`},
+    {n:"COGS",     a:m.rev,    b:m.gp,     t:"dec",   d:`${fN(100-S.gm,0)}% of revenue (gross margin ${fN(S.gm,0)}%)`},
+    {n:"Opex",     a:m.gp,     b:m.ebitda, t:"dec",   d:`${fN(S.opex,1)}% of revenue`},
+    {n:"EBITDA",   a:0,        b:m.ebitda, t:"total", d:"gross profit − opex"},
+    {n:"D&A",      a:m.ebitda, b:m.ebit,   t:"dec",   d:`fleet ${fB(m.fleetDA)} (${fN(S.sats,0)} sats ÷ ${fN(S.life,1)} yr life) + ground ${fB(m.otherDA)}`},
+    {n:"Interest", a:m.ebit,   b:m.pretax, t:"dec",   d:`${fN(S.intrate,1)}% on $${fN(S.netdebt,1)}B net debt`},
+    {n:"Tax",      a:m.pretax, b:m.ni,     t:"dec",   d: m.pretax>0 ? `${fN(S.tax,0)}% of pretax` : "no tax on a pre-tax loss"},
+    {n:"Net income",a:0,       b:m.ni,     t:"final", d:"what the P/E lens prices"},
+  ];
+  const W = Math.min(860, el.clientWidth || 760), H = 250;
+  const L = 52, R = 12, T = 18, B = 30;
+  const yMax = m.rev*1.04 || 1, yMin = Math.min(0, m.ni*1.1);
+  const y = v => T + (1-(v-yMin)/(yMax-yMin))*(H-T-B);
+  const n = steps.length, slot = (W-L-R)/n, bw = Math.min(58, slot*0.62);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="P&L waterfall from revenue to net income">`;
+  for (let i=0;i<=4;i++){
+    const v = yMin + (yMax-yMin)*i/4;
+    s += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>`;
+    s += `<text x="${L-7}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--ink3)">${fN(v,0)}</text>`;
+  }
+  s += `<line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)" stroke-width="1.5"/>`;
+  steps.forEach((st,i)=>{
+    const cx = L + slot*i + slot/2;
+    const top = Math.max(st.a, st.b), bot = Math.min(st.a, st.b);
+    const col = st.t==="total" ? "var(--s-ebitda)" : st.t==="final" ? (m.ni>=0?"var(--s-pe)":"var(--bad)") : "var(--wf-dec)";
+    const hh = Math.max(1.5, y(bot)-y(top));
+    s += `<rect class="wf" data-i="${i}" x="${cx-bw/2}" y="${y(top)}" width="${bw}" height="${hh}" rx="4" fill="${col}"/>`;
+    if (i < n-1 && steps[i+1].t!=="total" || (i<n-1 && steps[i+1].t==="total"))
+      s += `<line x1="${cx+bw/2}" x2="${L + slot*(i+1) + slot/2 - bw/2}" y1="${y(st.b)}" y2="${y(st.b)}" stroke="var(--ink3)" stroke-dasharray="3 3" stroke-width="1"/>`;
+    const delta = st.t==="dec" ? st.b-st.a : st.b;
+    const lab = (st.t==="dec" ? "−" : "") + fN(Math.abs(delta),1);
+    s += `<text x="${cx}" y="${y(top)-5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink)">${lab}</text>`;
+    s += `<text x="${cx}" y="${H-9}" text-anchor="middle" font-size="10" fill="${st.t==="dec"?"var(--ink3)":"var(--ink2)"}" font-weight="${st.t==="dec"?400:700}">${st.n}</text>`;
+  });
+  s += `</svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll(".wf").forEach(r=>{
+    r.addEventListener("mousemove", e=>{
+      const st = steps[+r.dataset.i];
+      const delta = st.t==="dec" ? st.b-st.a : st.b;
+      showTip(`<b>${st.n}</b> · ${fB(delta)}<br>${st.d}`, e.clientX, e.clientY);
+    });
+    r.addEventListener("mouseleave", hideTip);
+  });
+}
+
+/* ---- constellation dashboard ---- */
+function renderConstel(m){
+  const el = document.getElementById("constel");
+  const pctFleet = S.sats/S.ww*100;
+  const util = Math.min(100, S.subs/m.capacity*100);
+  el.innerHTML = `
+    <div class="meter">
+      <div class="mrow"><span class="mlabel">Fleet build-out</span>
+        <span class="mval mono">${fN(S.sats,0)} / ${S.ww} sats · ${fN(pctFleet,0)}%</span></div>
+      <div class="bar"><div class="fill" style="width:${pctFleet}%"></div>
+        <div class="tick" style="left:${45/S.ww*100}%"></div>
+        <div class="ticklab" style="left:${45/S.ww*100}%">45 · commercial start</div></div>
+    </div>
+    <div class="meter" style="margin-top:26px">
+      <div class="mrow"><span class="mlabel">Capacity utilization</span>
+        <span class="mval mono">${fN(S.subs,0)}M of ${fN(m.capacity,0)}M subs · ${fN(util,0)}%</span></div>
+      <div class="bar"><div class="fill" style="width:${util}%; background:${S.subs>m.capacity?"var(--bad)":"var(--slider)"}"></div></div>
+    </div>
+    <div class="statgrid">
+      <div class="scard"><div class="k">Replacement rate</div><div class="v mono">${fN(m.replSats,1)}<span style="font-size:11px"> sats/yr</span></div><div class="d">fleet ÷ ${fN(S.life,1)}-yr life — forever</div></div>
+      <div class="scard"><div class="k">Replacement capex</div><div class="v mono">${fB(m.replCapex)}<span style="font-size:11px">/yr</span></div><div class="d">annual spend to stand still</div></div>
+      <div class="scard"><div class="k">Capex to worldwide</div><div class="v mono">${fB(m.capexWW)}</div><div class="d">${fN(m.toWW,0)} sats × $${fN(S.satcost,1)}M</div></div>
+      <div class="scard"><div class="k">Fleet book value</div><div class="v mono">${fB(m.book)}</div><div class="d">current fleet at cost</div></div>
+    </div>`;
+}
+
+/* ---- coverage roadmap (AST guidance) ---- */
+const COV_MILESTONES = [
+  {sats:14,  label:"today", name:"14 satellites in orbit",
+   desc:"Intermittent service — coverage arrives in windows as satellites pass overhead, not continuously. Initial US service was targeted for early 2026.",
+   src:"fleet count: your asts-tracker (TLEs Jul 20, 2026) · Light Reading"},
+  {sats:45,  label:"sats", name:"Continuous — US & select markets",
+   desc:"AST guidance: 45–60 satellites deliver continuous coverage of the US, Europe, Japan, Saudi Arabia and other key strategic markets. This is where the model's commercial coverage begins.",
+   src:"AST SpaceMobile FAQ"},
+  {sats:90,  label:"sats", name:"Continuous global service",
+   desc:"~90 satellites provide continuous global service — the constellation AST says it is fully funded to build. Every satellite beyond ~90 deepens capacity and redundancy rather than unlocking new territory.",
+   src:"AST SpaceMobile FAQ · SpaceNews"},
+  {sats:248, label:"sats", name:"Full FCC-authorized constellation",
+   desc:"The FCC granted authority for a 248-satellite constellation in April 2026 — the model's full worldwide build and the maximum on every slider here.",
+   src:"SatNews, Apr 21 2026"},
+];
+const COV_CHECKPOINTS = [45, 100, 150, 200, 248];
+function covTier(sats){ return COV_MILESTONES.filter(t => sats >= t.sats).pop() || COV_MILESTONES[0]; }
+function renderCoverage(){
+  if (views.console.hidden) return;
+  const pct = Math.min(100, S.sats/248*100);
+  document.getElementById("covtrack").innerHTML = `
+    <div class="meter" style="margin-bottom:28px">
+      <div class="mrow"><span class="mlabel">The road to 248</span>
+        <span class="mval mono">your setting: ${fN(S.sats,0)} sats</span></div>
+      <div class="bar"><div class="fill" style="width:${pct}%"></div>
+        ${COV_MILESTONES.map(m=>`<div class="tick" style="left:${m.sats/248*100}%"></div>
+          <div class="ticklab" style="left:${m.sats/248*100}%">${m.sats}</div>`).join("")}
+      </div>
+    </div>`;
+  const here = covTier(S.sats);
+  document.getElementById("covroad").innerHTML = COV_MILESTONES.map(m=>{
+    const status = m === here
+      ? `<span class="chip here">◆ your setting is here</span>`
+      : S.sats >= m.sats
+        ? `<span class="chip ok">✓ within your setting</span>`
+        : `<span class="chip off">ahead of your setting</span>`;
+    return `<div class="roadrow">
+      <div class="roadnum mono">${m.sats}<span class="u">${m.label}</span></div>
+      <div class="roadbody"><h4>${m.name}</h4><p>${m.desc}</p><div class="src">${m.src}</div></div>
+      <div>${status}</div>
+    </div>`;
+  }).join("");
+  const head = "<tr><th>Fleet</th><th style='text-align:left'>Coverage tier (per AST guidance)</th><th>Capacity</th><th>Rev @ your ARPU</th></tr>";
+  const rows = COV_CHECKPOINTS.map(c=>{
+    const t = covTier(c);
+    const cap = c*S.capsat;
+    const rev = Math.min(S.subs, cap)/1000*S.arpu*12*S.share/100;
+    return `<tr><td class="mono" style="font-weight:700">${c} sats</td>
+      <td style="text-align:left">${t.name}${c>90 && c<248 ? " + capacity build" : ""}</td>
+      <td class="mono">${fN(cap,0)}M subs</td>
+      <td class="mono">${fB(rev)}/yr</td></tr>`;
+  }).join("");
+  document.getElementById("covtable").innerHTML = head + rows;
+}
+
+/* ---- bar chart: equity by lens ---- */
+function renderBars(m){
+  const host = document.getElementById("barchart");
+  if (views.console.hidden) return;
+  const data = [
+    ["EV/GP", m.eqG, "var(--s-gross)"],
+    ["EV/EBITDA", m.eqE, "var(--s-ebitda)"],
+    ["P/E", m.eqP, "var(--s-pe)"],
+    ["Blend", m.blend, "var(--s-blend)"],
+  ];
+  const W = Math.min(760, host.clientWidth || 700), H = 148;
+  const L = 84, R = 74, rowH = 30, top = 12;
+  const maxV = Math.max(1, ...data.map(d=>d[1])), minV = Math.min(0, ...data.map(d=>d[1]));
+  const x = v => L + (v-minV)/(maxV-minV) * (W-L-R);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Equity value by valuation lens">`;
+  s += `<line x1="${x(0)}" y1="${top-4}" x2="${x(0)}" y2="${top+4*rowH}" stroke="var(--line)" stroke-width="1"/>`;
+  data.forEach(([name,v,col],i)=>{
+    const y = top + i*rowH, h = 18;
+    const x0 = Math.min(x(0),x(v)), w = Math.max(1.5, Math.abs(x(v)-x(0)));
+    s += `<text x="${L-8}" y="${y+h/2+4}" text-anchor="end" font-size="11" fill="var(--ink2)">${name}</text>`;
+    s += `<rect class="bar" data-i="${i}" x="${x0}" y="${y}" width="${w}" height="${h}" rx="4" fill="${col}"/>`;
+    s += `<text x="${v>=0? x(v)+7 : x(v)-7}" y="${y+h/2+4}" text-anchor="${v>=0?"start":"end"}" font-size="11.5" font-weight="700" fill="var(--ink)">${fB(v)}</text>`;
+  });
+  s += `</svg>`;
+  host.innerHTML = s;
+  host.querySelectorAll(".bar").forEach(r=>{
+    r.addEventListener("mousemove", e=>{
+      const d = data[+r.dataset.i], px = [m.pxG,m.pxE,m.pxP,m.pxB][+r.dataset.i];
+      showTip(`<b>${d[0]}</b><br>equity ${fB(d[1])}<br>implied ${fPx(px)}/sh`, e.clientX, e.clientY);
+    });
+    r.addEventListener("mouseleave", hideTip);
+  });
+}
+
+/* ---- curve: blend price vs sats ---- */
+function renderCurve(){
+  const el = document.getElementById("curvechart");
+  if (views.console.hidden) return;
+  const W = Math.min(1000, el.clientWidth || 800), H = 240;
+  const L = 58, R = 20, T = 14, B = 34;
+  const pts = [];
+  for (let s = 45; s <= 248; s++){
+    const p = {...S, sats:s, subs:Math.min(S.subs, s*S.capsat)};
+    pts.push([s, model(p).pxB, p.subs]);
+  }
+  const ys = pts.map(p=>p[1]);
+  const yMin = Math.min(0, ...ys), yMax = Math.max(...ys)*1.06 || 1;
+  const x = s => L + (s-45)/(248-45)*(W-L-R);
+  const y = v => T + (1-(v-yMin)/(yMax-yMin))*(H-T-B);
+  let svg = `<svg id="curvesvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Blend price versus satellites deployed">`;
+  for (let i=0;i<=4;i++){
+    const v = yMin + (yMax-yMin)*i/4;
+    svg += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>`;
+    svg += `<text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--ink3)">${fPx(v)}</text>`;
+  }
+  for (const s of [45,90,135,180,215,248]){
+    svg += `<text x="${x(s)}" y="${H-12}" text-anchor="middle" font-size="10.5" fill="var(--ink3)">${s}</text>`;
+  }
+  svg += `<text x="${(L+W-R)/2}" y="${H-1}" text-anchor="middle" font-size="10" fill="var(--ink3)" letter-spacing="1">SATELLITES IN ORBIT</text>`;
+  const path = pts.map((p,i)=>(i?"L":"M")+x(p[0]).toFixed(1)+" "+y(p[1]).toFixed(1)).join("");
+  svg += `<path d="${path}L${x(248)} ${y(yMin)}L${x(45)} ${y(yMin)}Z" fill="var(--s-blend)" opacity="0.10"/>`;
+  svg += `<path d="${path}" fill="none" stroke="var(--s-blend)" stroke-width="2"/>`;
+  const cur = pts[Math.min(248, Math.max(45, Math.round(S.sats)))-45];
+  svg += `<circle cx="${x(cur[0])}" cy="${y(cur[1])}" r="5" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>`;
+  svg += `<line id="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="var(--ink3)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
+  svg += `<rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" id="hover"/>`;
+  svg += `</svg>`;
+  el.innerHTML = svg;
+  const hover = el.querySelector("#hover"), xh = el.querySelector("#xh"), svgEl = el.querySelector("#curvesvg");
+  hover.addEventListener("mousemove", e=>{
+    const r = svgEl.getBoundingClientRect();
+    const sx = (e.clientX - r.left) * (W / r.width);
+    const s = Math.max(45, Math.min(248, Math.round(45 + (sx-L)/(W-L-R)*(248-45))));
+    const p = pts[s-45];
+    xh.setAttribute("x1", x(s)); xh.setAttribute("x2", x(s)); xh.setAttribute("visibility","visible");
+    showTip(`<b>${s} sats</b><br>blend ${fPx(p[1])}/sh<br>serving ${fN(p[2],0)}M subs${p[2]<S.subs?" (capacity-capped)":""}`, e.clientX, e.clientY);
+  });
+  hover.addEventListener("mouseleave", ()=>{ xh.setAttribute("visibility","hidden"); hideTip(); });
+}
+
+/* ---- adoption curve chart ---- */
+function renderAdoption(){
+  const el = document.getElementById("adoptchart");
+  if (views.console.hidden) return;
+  document.getElementById("adopt-sub").textContent =
+    `Subscribers follow an S-curve to ${fN(S.subs,0)}M over ${fN(S.nyears,0)} years. The amber line values each year frozen (today's fleet economics at that year's subs); the green line discounts each of those values back to today at ${fN(S.disc,1)}% — where it flattens is what the adoption is worth now.`;
+  const NY = S.nyears + 2;
+  const pts = [];
+  for (let t = 0; t <= NY; t += 0.25){
+    const subs = Math.min(adoptionSubs(t), S.sats*S.capsat);
+    const m = model({...S, subs});
+    pts.push([t, m.pxB, m.pxB*Math.pow(1+S.disc/100, -t), subs]);
+  }
+  const W = Math.min(1000, el.clientWidth || 800), H = 240;
+  const L = 58, R = 20, T = 14, B = 34;
+  const vals = pts.flatMap(p=>[p[1],p[2]]);
+  const yMin = Math.min(0, ...vals), yMax = Math.max(1, ...vals)*1.06;
+  const x = t => L + t/NY*(W-L-R);
+  const y = v => T + (1-(v-yMin)/(yMax-yMin))*(H-T-B);
+  let s = `<svg id="adoptsvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Blend price along the subscriber adoption curve, frozen and discounted to today">`;
+  for (let i=0;i<=4;i++){
+    const v = yMin + (yMax-yMin)*i/4;
+    s += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>`;
+    s += `<text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--ink3)">${fPx(v)}</text>`;
+  }
+  for (let t=0; t<=NY; t++)
+    s += `<text x="${x(t)}" y="${H-12}" text-anchor="middle" font-size="10.5" fill="var(--ink3)">Y${t}</text>`;
+  s += `<text x="${(L+W-R)/2}" y="${H-1}" text-anchor="middle" font-size="10" fill="var(--ink3)" letter-spacing="1">YEARS FROM TODAY</text>`;
+  s += `<line x1="${x(S.nyears)}" x2="${x(S.nyears)}" y1="${T}" y2="${H-B}" stroke="var(--ink3)" stroke-width="1" stroke-dasharray="2 3"/>`;
+  s += `<text x="${x(S.nyears)}" y="${T+10}" text-anchor="middle" font-size="9.5" fill="var(--ink3)">target reached</text>`;
+  const path = i => pts.map((p,j)=>(j?"L":"M")+x(p[0]).toFixed(1)+" "+y(p[i]).toFixed(1)).join("");
+  s += `<path d="${path(1)}" fill="none" stroke="var(--s-blend)" stroke-width="2"/>`;
+  s += `<path d="${path(2)}" fill="none" stroke="var(--s-pe)" stroke-width="2" stroke-dasharray="5 3"/>`;
+  const pvNow = pts.find(p=>p[0]===S.nyears);
+  if (pvNow) s += `<circle cx="${x(S.nyears)}" cy="${y(pvNow[2])}" r="4.5" fill="var(--s-pe)" stroke="var(--bg)" stroke-width="2"/>`;
+  s += `<line id="axh" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="var(--ink3)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
+  s += `<rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" id="ahover"/>`;
+  s += `</svg>`;
+  el.innerHTML = s;
+  const hover = el.querySelector("#ahover"), xh = el.querySelector("#axh"), svgEl = el.querySelector("#adoptsvg");
+  hover.addEventListener("mousemove", e=>{
+    const r = svgEl.getBoundingClientRect();
+    const t = Math.max(0, Math.min(NY, Math.round(((e.clientX-r.left)*(W/r.width)-L)/(W-L-R)*NY*4)/4));
+    const p = pts.find(q=>Math.abs(q[0]-t)<0.01);
+    if (!p) return;
+    xh.setAttribute("x1", x(t)); xh.setAttribute("x2", x(t)); xh.setAttribute("visibility","visible");
+    showTip(`<b>Year ${fN(t,2)}</b> · ${fN(p[3],0)}M subs<br>frozen value ${fPx(p[1])}/sh<br>worth today ${fPx(p[2])}/sh`, e.clientX, e.clientY);
+  });
+  hover.addEventListener("mouseleave", ()=>{ xh.setAttribute("visibility","hidden"); hideTip(); });
+}
+
+/* ---- sanity + stages ---- */
+function renderSanity(m){
+  const chips = [];
+  const rps = m.revPerSat;
+  chips.push(rps > S.maxrps
+    ? ["bad","✕",`Rev/sat ${fM(rps)} exceeds the ${fM(S.maxrps)} plausibility ceiling — add sats or trim subs/ARPU`]
+    : ["ok","✓",`Rev/sat ${fM(rps)} per year (at the full 248 fleet: ${fM(m.revPerSat256)}) — within the ${fM(S.maxrps)} ceiling`]);
+  const evr = m.evRev;
+  chips.push(evr > 4
+    ? ["warn","▲",`EV/Revenue ${fN(evr,1)}× — above mature telecom 2–4× (growth premium priced in)`]
+    : evr < 2
+      ? ["warn","▼",`EV/Revenue ${fN(evr,1)}× — below telecom 2–4× (conservative)`]
+      : ["ok","✓",`EV/Revenue ${fN(evr,1)}× — inside mature telecom 2–4×`]);
+  chips.push(S.subs > m.capacity
+    ? ["bad","✕",`${fN(S.subs,0)}M subs exceed fleet capacity of ${fN(m.capacity,0)}M — needs more satellites`]
+    : ["ok","✓",`${fN(S.subs,0)}M subs within fleet capacity of ${fN(m.capacity,0)}M`]);
+  document.getElementById("sanity").innerHTML = chips.map(([cls,ic,t]) =>
+    `<div class="chip ${cls}"><span>${ic}</span>${t}</div>`).join("");
+}
+const STAGES = [
+  ["Early commercial", 45, 50, 3.00, 20, 30, 50, 1],
+  ["Continental coverage", 90, 150, 3.50, 16, 24, 40, 2.5],
+  ["Near-global", 168, 500, 4.00, 13, 19, 32, 4],
+  ["Worldwide (base)", 248, 1000, 5.00, 11, 16, 28, 6],
+  ["Mature / saturated", 248, 1500, 5.00, 8, 11, 18, 9],
+];
+function stageModels(){
+  return STAGES.map(([name,sats,subs,arpu,mg,me,mp,eta]) =>
+    ({name, sats, subs, arpu, mg, me, mp, eta,
+      m: model({...S, sats, subs, arpu, mg, me, mp}),
+      pv: model({...S, sats, subs, arpu, mg, me, mp}).pxB * Math.pow(1+S.disc/100, -eta)}));
+}
+function renderStages(){
+  const head = "<tr><th>Stage</th><th>Sats</th><th>Subs</th><th>ARPU</th><th>GP×</th><th>EBITDA×</th><th>P/E×</th><th>Revenue</th><th>Net inc</th><th>Blend</th><th>$/sh then</th><th>ETA</th><th>PV today</th><th>Rev/sat</th></tr>";
+  const rows = stageModels().map(({name,sats,subs,arpu,mg,me,mp,eta,m,pv})=>{
+    const rpsBad = m.revPerSat > S.maxrps;
+    return `<tr><td>${name}</td><td class="mono">${sats}</td><td class="mono">${fN(subs,0)}M</td>
+      <td class="mono">$${arpu.toFixed(2)}</td><td class="mono">${mg}×</td><td class="mono">${me}×</td><td class="mono">${mp}×</td>
+      <td class="mono">${fB(m.rev)}</td><td class="mono ${m.ni<0?"neg":""}">${fB(m.ni)}</td>
+      <td class="mono" style="font-weight:700">${fB(m.blend)}</td>
+      <td class="mono" style="font-weight:700">${fPx(m.pxB)}</td>
+      <td class="mono">${fN(eta,1)}y</td>
+      <td class="mono ${pv<0?"neg":""}" style="font-weight:700; color:${pv<0?"var(--bad)":"var(--accent)"}">${fPx(pv)}</td>
+      <td class="mono" style="${rpsBad?"color:var(--bad); font-weight:700":""}">${fM(m.revPerSat)}${rpsBad?" ⚠":""}</td></tr>`;
+  }).join("");
+  document.getElementById("stages").innerHTML = head + rows;
+}
+
+/* ---------------- financing tab ---------------- */
+function financeSim(){
+  const target = S.sats;
+  const yearsToTarget = Math.max(0, Math.ceil((target - F.satsNow)/F.rate));
+  const N = Math.min(16, Math.max(10, yearsToTarget + 3));
+  const rows = [];
+  let cum = F.cash, prevSats = F.satsNow;
+  for (let yr = 1; yr <= N; yr++){
+    const sats = Math.min(target, F.satsNow + F.rate*yr);
+    const newSats = sats - prevSats;
+    const subs = Math.min(adoptionSubs(yr), sats*S.capsat);
+    const m = model({...S, sats, subs});
+    const capex = (newSats*S.satcost + prevSats/S.life*S.satcost)/1000;
+    const opCF = m.ni + m.fleetDA + m.otherDA;           // add D&A back — capex is cash, D&A isn't
+    const fcf = opCF - capex;
+    cum += fcf;
+    rows.push({yr, sats, newSats, subs, rev:m.rev, ebitda:m.ebitda, capex, fcf, cum});
+    prevSats = sats;
+  }
+  const buildCapex = Math.max(0, target - F.satsNow)*S.satcost/1000;
+  const minCash = Math.min(F.cash, ...rows.map(r=>r.cum));
+  const gap = minCash < 0 ? -minCash : 0;
+  const beY = rows.find(r=>r.fcf > 0);
+  const troughIdx = rows.reduce((a,r,i)=>rows[a].cum <= r.cum ? a : i, 0);
+  return {rows, target, yearsToTarget, buildCapex, minCash, gap, beY, troughIdx};
+}
+function renderFinance(){
+  if (views.fin.hidden) return;
+  const sim = financeSim();
+  const k = document.getElementById("fin-kpis");
+  const last = sim.rows[sim.rows.length-1];
+  k.innerHTML = `
+    <div class="kpi"><div class="k">Build capex to ${fN(sim.target,0)} sats</div><div class="v mono">${fB(sim.buildCapex)}</div><div class="d">${fN(Math.max(0,sim.target-F.satsNow),0)} sats × $${fN(S.satcost,1)}M · ~${fN(sim.yearsToTarget,0)} yrs at ${fN(F.rate,0)}/yr</div></div>
+    <div class="kpi"><div class="k">Cash low point</div><div class="v mono ${sim.minCash<0?"neg":""}">${fB(sim.minCash)}</div><div class="d">year ${sim.rows[sim.troughIdx].yr} of the plan</div></div>
+    <div class="kpi ${sim.gap>0?"":"hero"}"><div class="k">Additional financing needed</div><div class="v mono ${sim.gap>0?"neg":""}">${sim.gap>0?fB(sim.gap):"$0"}</div><div class="d">${sim.gap>0?"raise via debt/equity before the trough":"covered by cash + operating cash flow"}</div></div>
+    <div class="kpi"><div class="k">FCF breakeven</div><div class="v mono">${sim.beY?"Year "+sim.beY.yr:"—"}</div><div class="d">${sim.beY?`first year revenue covers opex + all launches (${fB(sim.beY.fcf)} FCF)`:"not within the modeled window"}</div></div>`;
+  document.getElementById("fin-sub").textContent =
+    `Start: ${fN(F.satsNow,0)} sats & ${fB(F.cash)} cash · launching ${fN(F.rate,0)}/yr toward the Console target of ${fN(sim.target,0)} · subscribers follow the Console's S-curve adoption to ${fN(S.subs,0)}M over ${fN(S.nyears,0)} years (capacity-capped).`;
+  // chart — slot 0 is the starting cash position, bars begin at Y1
+  const el = document.getElementById("finchart");
+  const W = Math.min(1000, el.clientWidth || 800), H = 280;
+  const L = 64, R = 16, T = 26, B = 30;
+  const vals = sim.rows.flatMap(r=>[r.fcf, r.cum]).concat([F.cash]);
+  const yMin = Math.min(0, ...vals)*1.08, yMax = Math.max(1, ...vals)*1.08;
+  const y = v => T + (1-(v-yMin)/(yMax-yMin))*(H-T-B);
+  const nSlots = sim.rows.length + 1;
+  const slot = (W-L-R)/nSlots, bw = Math.min(34, slot*0.55);
+  const cxAt = i => L + slot*(i+1) + slot/2;      // bar/line x for year i (0-based)
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Annual free cash flow bars and cash balance line through the build-out">`;
+  s += `<text x="${L-52}" y="${T-12}" font-size="10" font-weight="700" fill="var(--ink3)" letter-spacing="1">$ BILLIONS</text>`;
+  for (let i=0;i<=4;i++){
+    const v = yMin + (yMax-yMin)*i/4;
+    s += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>`;
+    s += `<text x="${L-7}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--ink3)">$${fN(v,0)}B</text>`;
+  }
+  s += `<line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)" stroke-width="1.5"/>`;
+  if (yMin < -0.1)
+    s += `<text x="${W-R}" y="${y(0)+13}" text-anchor="end" font-size="9.5" fill="var(--ink3)">below $0 = the plan needs outside money</text>`;
+  sim.rows.forEach((r,i)=>{
+    const cx = cxAt(i);
+    const h = Math.max(1.5, Math.abs(y(r.fcf)-y(0)));
+    s += `<rect class="fb" data-i="${i}" x="${cx-bw/2}" y="${y(Math.max(0,r.fcf))}" width="${bw}" height="${h}" rx="3.5" fill="${r.fcf>=0?"var(--s-ebitda)":"var(--bad)"}"/>`;
+    s += `<text x="${cx}" y="${H-9}" text-anchor="middle" font-size="10" fill="var(--ink3)">Y${r.yr}</text>`;
+  });
+  s += `<text x="${L + slot/2}" y="${H-9}" text-anchor="middle" font-size="10" fill="var(--ink3)">Start</text>`;
+  const linePts = [[L + slot/2, y(F.cash), null]].concat(sim.rows.map((r,i)=>[cxAt(i), y(r.cum), i]));
+  s += `<path d="${linePts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("")}" fill="none" stroke="var(--s-blend)" stroke-width="2.5"/>`;
+  for (const [px,py,i] of linePts){
+    s += `<circle ${i===null?"":`class="fb" data-i="${i}"`} cx="${px}" cy="${py}" r="3.5" fill="var(--s-blend)" stroke="var(--bg)" stroke-width="1.5"/>`;
+  }
+  s += `<text x="${L + slot/2}" y="${y(F.cash)-10}" text-anchor="start" font-size="9.5" font-weight="700" fill="var(--s-blend)">${fB(F.cash)} on hand</text>`;
+  if (sim.beY && sim.beY.yr > 1){
+    const i = sim.rows.indexOf(sim.beY);
+    s += `<text x="${cxAt(i)}" y="${y(Math.max(0,sim.beY.fcf))-6}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--s-ebitda)">first + year</text>`;
+  }
+  if (sim.gap > 0){
+    const r = sim.rows[sim.troughIdx];
+    s += `<text x="${cxAt(sim.troughIdx)}" y="${y(r.cum)+16}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--bad)">low: ${fB(r.cum)}</text>`;
+  }
+  s += `</svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll(".fb").forEach(n=>{
+    n.addEventListener("mousemove", e=>{
+      const r = sim.rows[+n.dataset.i];
+      showTip(`<b>Year ${r.yr}</b> · ${fN(r.sats,0)} sats, ${fN(r.subs,0)}M subs<br>revenue ${fB(r.rev)} · capex ${fB(r.capex)}<br>FCF ${fB(r.fcf)} · cash ${fB(r.cum)}`, e.clientX, e.clientY);
+    });
+    n.addEventListener("mouseleave", hideTip);
+  });
+  // table
+  const head = "<tr><th>Year</th><th>Sats</th><th>New</th><th>Subs</th><th>Revenue</th><th>EBITDA</th><th>Capex</th><th>FCF</th><th>Cash</th></tr>";
+  const rows = sim.rows.map(r=>
+    `<tr><td class="mono">Y${r.yr}</td><td class="mono">${fN(r.sats,0)}</td><td class="mono">+${fN(r.newSats,0)}</td>
+     <td class="mono">${fN(r.subs,0)}M</td><td class="mono">${fB(r.rev)}</td><td class="mono">${fB(r.ebitda)}</td>
+     <td class="mono">${fB(r.capex)}</td><td class="mono ${r.fcf<0?"neg":""}" style="font-weight:700">${fB(r.fcf)}</td>
+     <td class="mono ${r.cum<0?"neg":""}">${fB(r.cum)}</td></tr>`).join("");
+  document.getElementById("fintable").innerHTML = head + rows;
+  document.getElementById("fin-notes").innerHTML =
+    `AST states it is <b>fully funded for the ~90-satellite constellation</b> (Q1 2026). This sim stress-tests beyond that: whether operating cash can carry the build to ${fN(sim.target,0)} satellites, including replacing the existing fleet every ${fN(S.life,1)} years. FCF ≈ net income + D&amp;A − capex; demand follows the Console's S-curve adoption (capacity-capped), existing ~$4.1B debt service (incl. the new $1.15B 1.625% converts due 2034) flows through the Console interest input, and no new dilution or debt is assumed — that's exactly what the "additional financing needed" figure would represent. Note the $3.8B cash figure includes restricted cash, so truly deployable capital is somewhat less.`;
+}
+
+/* ---------------- underwriting tab ---------------- */
+const UW_STAGE_NOTES = [
+  {anchor:"45 sats = the low end of AST's 45–60 guidance for continuous US & select-market coverage.",
+   why:"First real revenue: coverage is continuous but thin, so 50M subs (~14% of fleet capacity) at an intro $3.00 ARPU. Multiples are hypergrowth-priced (50× P/E) — the market pays for the story, and earnings are barely positive or negative, so the P/E lens punishes the blend."},
+  {anchor:"90 sats = AST's stated threshold for continuous global service (company says it is fully funded to here).",
+   why:"Service quality unlocks bigger MNO commitments: 150M subs at $3.50. Still premium multiples (40× P/E) as growth is steep but proof accumulates."},
+  {anchor:"168 sats — between the 90-sat global threshold and the 248-sat FCC grant; extra sats deepen capacity and redundancy.",
+   why:"Scale economics arrive: 500M subs at $4.00. Multiples start compressing (32× P/E) as the story de-risks and the growth rate math gets harder."},
+  {anchor:"248 sats = the full FCC-authorized constellation (granted Apr 2026).",
+   why:"The model's base case: 1B subs at $5.00 — the owner's calibration anchors ($60B revenue, $22B net income). Multiples are quality-compounder grade (28× P/E), no longer hypergrowth."},
+  {anchor:"Same 248-sat fleet, deeper penetration.",
+   why:"1.5B subs pushes revenue per satellite to ~$350M/yr — above the plausibility ceiling, which the sanity flag calls out. Multiples compress to telecom-plus (18× P/E): growth is over, replacement capex is forever. Note the blend barely rises from the Worldwide stage — multiple compression eats the extra earnings. That's the core insight of staging."},
+];
+function renderUnderwriting(m){
+  if (views.uw.hidden) return;
+  document.getElementById("uw-blend").textContent = fB(m.blend);
+  document.getElementById("uw-px").textContent = fPx(m.pxB);
+  document.getElementById("uw-sh").textContent = fN(m.effSh,0);
+  document.getElementById("uw-ebm").textContent = fN(S.gm - S.opex, 1);
+  document.getElementById("uw-gm").textContent = fN(S.gm, 0);
+  document.getElementById("uw-op").textContent = fN(S.opex, 1);
+  // adoption panel live numbers
+  document.getElementById("uw-pv-math").textContent =
+    `${fPx(m.pxB)} ÷ (1+${fN(S.disc,1)}%)^${fN(S.nyears,0)} = ${fPx(m.pxToday)}/sh (${fN(m.pxToday/REF.px,1)}× today's $${REF.px.toFixed(2)})`;
+  const early = model({...S, sats:45, subs:50, arpu:3.00, mg:20, me:30, mp:50});
+  document.getElementById("uw-ex-frozen").textContent = fPx(early.pxB) + "/sh";
+  document.getElementById("uw-ex-pv").textContent = fPx(m.pxToday) + "/sh";
+  // dilution panel
+  document.getElementById("uw-cvt-tot").textContent = fN(CONVERT_SHARES,1);
+  document.getElementById("uw-effsh").textContent = fN(S.shares + CONVERT_SHARES,0);
+  document.getElementById("uw-cvt").innerHTML =
+    "<tr><th style='text-align:left'>Series</th><th>Principal</th><th>Conversion</th><th>Shares if converted</th><th style='text-align:left'>Notes</th></tr>" +
+    CONVERTS.map(c=>`<tr><td>${c.name}</td><td class="mono">$${fN(c.prin,1)}M</td>
+      <td class="mono">$${c.conv.toFixed(2)}</td><td class="mono">${fN(c.prin/c.conv,2)}M</td>
+      <td style="text-align:left; font-size:11px; color:var(--ink3)">${c.note}</td></tr>`).join("") +
+    `<tr><td style="font-weight:700">Total</td><td class="mono" style="font-weight:700">$${fN(CONVERTS.reduce((a,c)=>a+c.prin,0),0)}M</td><td></td>
+      <td class="mono" style="font-weight:700">${fN(CONVERT_SHARES,2)}M</td>
+      <td style="text-align:left; font-size:11px; color:var(--ink3)">+${fN(CONVERT_SHARES/S.shares*100,1)}% on ${fN(S.shares,0)}M</td></tr>`;
+  const el = document.getElementById("uw-stages");
+  el.innerHTML = stageModels().map(({name,sats,subs,arpu,mg,me,mp,m},i)=>`
+    <div class="stagecard">
+      <h4>${i+1} · ${name} — ${fPx(m.pxB)}/sh</h4>
+      <div class="meta mono">${sats} sats · ${fN(subs,0)}M subs · $${arpu.toFixed(2)} ARPU · multiples ${mg}× GP / ${me}× EBITDA / ${mp}× P/E · blend ${fB(m.blend)}</div>
+      <p><b>Fleet anchor:</b> ${UW_STAGE_NOTES[i].anchor}</p>
+      <p><b>Underwriting:</b> ${UW_STAGE_NOTES[i].why}</p>
+    </div>`).join("");
+}
+
+/* ---------------- spreadsheet view ---------------- */
+function gridHead(cols){
+  return "<tr><th></th>" + cols.map(c=>`<th>${c}</th>`).join("") + "</tr>";
+}
+function renderSheetInputs(){
+  if (views.sheet.hidden) return;
+  let rows = "", rn = 1;
+  const cell = (cls,txt) => `<td class="${cls}">${txt}</td>`;
+  for (const [gname, ctls] of GROUPS){
+    rows += `<tr>${cell("rn",rn++)}<td class="sec" colspan="3">${gname.replace("ADV::","")}</td></tr>`;
+    for (const [key,label,,,,note] of ctls){
+      rows += `<tr>${cell("rn",rn++)}${cell("",label)}${cell("inp mono",fmtVal(key))}${cell("fx",note||"")}</tr>`;
+    }
+  }
+  document.getElementById("sh-inputs").innerHTML = gridHead(["A — input","B — value","C — note"]) + rows;
+}
+function renderSheetModel(m){
+  if (views.sheet.hidden) return;
+  const rows = [
+    ["sec","P&L WATERFALL ($B/YR)"],
+    ["Revenue", fB(m.rev), "=Subs/1000 × ARPU × 12 × RevShare"],
+    ["Gross profit", fB(m.gp), "=Revenue × GrossMargin"],
+    ["Opex", fB(m.opex), "=Revenue × Opex%"],
+    ["EBITDA", fB(m.ebitda), "=GrossProfit − Opex", 1],
+    ["Fleet D&A", fB(m.fleetDA), "=Sats × CostPerSat ÷ Lifespan ÷ 1000"],
+    ["Ground/other D&A", fB(m.otherDA), "=OtherD&A × Sats ÷ 248"],
+    ["EBIT", fB(m.ebit), "=EBITDA − FleetD&A − OtherD&A"],
+    ["Interest", fB(m.interest), "=NetDebt × Rate"],
+    ["Pretax income", fB(m.pretax), "=EBIT − Interest"],
+    ["Net income", fB(m.ni), "=IF(Pretax>0, Pretax×(1−Tax), Pretax)", 1],
+    ["sec","CONSTELLATION ECONOMICS"],
+    ["Replacement rate", fN(m.replSats,1)+" sats/yr", "=Sats ÷ Lifespan"],
+    ["Replacement capex", fB(m.replCapex)+"/yr", "=ReplRate × CostPerSat ÷ 1000"],
+    ["Sats remaining to worldwide", fN(m.toWW,0), "=MAX(0, 248 − Sats)"],
+    ["Capex to reach worldwide", fB(m.capexWW), "=Remaining × CostPerSat ÷ 1000"],
+    ["Constellation book value", fB(m.book), "=Sats × CostPerSat ÷ 1000"],
+    ["sec","VALUATION — THREE LENSES ($B EQUITY)"],
+    ["1. EV/Gross Profit lens", fB(m.eqG), "=GP × 11× − NetDebt"],
+    ["2. EV/EBITDA lens", fB(m.eqE), "=EBITDA × 16× − NetDebt"],
+    ["3. P/E lens", fB(m.eqP), "=NI × 28×  (already equity)"],
+    ["Blended equity value (implied mkt cap)", fB(m.blend), "=(P/E×50% + EBITDA×35% + GP×15%)", 1],
+    ["sec","IMPLIED SHARE PRICE"],
+    ["Price — EV/GP lens", fPx(m.pxG), "=EqGP × 1000 ÷ Shares"],
+    ["Price — EV/EBITDA lens", fPx(m.pxE), "=EqEBITDA × 1000 ÷ Shares"],
+    ["Price — P/E lens", fPx(m.pxP), "=EqPE × 1000 ÷ Shares"],
+    ["Price — BLEND", fPx(m.pxB), "=Blend × 1000 ÷ EffShares", 1],
+    ["Upside vs current price", fN(m.pxB/REF.px,1)+"×", "=BlendPrice ÷ $"+REF.px.toFixed(2)+" ("+REF.date+")"],
+    ["sec","DILUTION & ADOPTION"],
+    ["Potential convert shares", fN(CONVERT_SHARES,2)+"M", "=Σ principal ÷ conversion price (4 series)"],
+    ["Effective diluted shares", fN(m.effSh,1)+"M", "=Shares×(1+"+fN(S.futdil,0)+"% future) + ConvertShares×"+fN(S.dilution,0)+"%"],
+    ["Discount factor", fN(m.pvF,4), "=1 ÷ (1+"+fN(S.disc,1)+"%)^"+fN(S.nyears,0)],
+    ["Value today (PV)", fPx(m.pxToday), "=BlendPrice × DiscountFactor", 1],
+    ["PV equity value", fB(m.eqToday), "=BlendEquity × DiscountFactor"],
+    ["PV upside vs current price", fN(m.pxToday/REF.px,1)+"×", "=PVPrice ÷ $"+REF.px.toFixed(2)],
+    ["sec","SANITY CHECKS"],
+    ["Revenue per sat (current fleet)", fM(m.revPerSat), "=Revenue × 1000 ÷ Sats"],
+    ["Revenue per sat (at 248 full fleet)", fM(m.revPerSat256), "=Revenue × 1000 ÷ 248"],
+    ["Rev/sat flag", m.revPerSat > S.maxrps ? "FLAG: exceeds ceiling" : "OK", "=IF(RevPerSat > Ceiling, flag)"],
+    ["EV / Revenue", fN(m.evRev,1)+"×", "=(Blend + NetDebt) ÷ Revenue"],
+    ["EV/Rev flag", m.evRev>4 ? "ABOVE telecom 2–4×" : m.evRev<2 ? "BELOW telecom 2–4×" : "Within telecom 2–4×", "vs mature telecom comps"],
+    ["Subscriber capacity of fleet", fN(m.capacity,0)+"M", "=Sats × CapacityPerSat"],
+    ["Capacity flag", S.subs > m.capacity ? "FLAG: subs exceed capacity" : "OK", "=IF(Subs > Capacity, flag)"],
+  ];
+  let html = gridHead(["A — line","B — value","C — formula"]), rn = 1;
+  for (const r of rows){
+    if (r[0] === "sec"){ html += `<tr><td class="rn">${rn++}</td><td class="sec" colspan="3">${r[1]}</td></tr>`; continue; }
+    const [label, val, fx, major] = r;
+    html += `<tr><td class="rn">${rn++}</td><td class="${major?"bold":""}">${label}</td>
+      <td class="mono ${major?"bold":""}" style="text-align:right">${val}</td><td class="fx mono">${fx}</td></tr>`;
+  }
+  document.getElementById("sh-model").innerHTML = html;
+}
+function renderSheetStages(){
+  if (views.sheet.hidden) return;
+  const cols = ["A — stage","B Sats","C Subs","D ARPU","E GP×","F EBITDA×","G P/E×","H Revenue","I EBITDA","J Net inc","K Blend","L $/sh"];
+  let html = gridHead(cols), rn = 1;
+  for (const {name,sats,subs,arpu,mg,me,mp,m} of stageModels()){
+    html += `<tr><td class="rn">${rn++}</td><td>${name}</td>
+      <td class="inp mono">${sats}</td><td class="inp mono">${fN(subs,0)}M</td><td class="inp mono">$${arpu.toFixed(2)}</td>
+      <td class="inp mono">${mg}×</td><td class="inp mono">${me}×</td><td class="inp mono">${mp}×</td>
+      <td class="mono">${fB(m.rev)}</td><td class="mono">${fB(m.ebitda)}</td>
+      <td class="mono ${m.ni<0?"neg":""}">${fB(m.ni)}</td>
+      <td class="mono bold">${fB(m.blend)}</td><td class="mono bold">${fPx(m.pxB)}</td></tr>`;
+  }
+  document.getElementById("sh-stages").innerHTML = html;
+}
+
+/* ---------------- workbook download ---------------- */
+const XLSX_B64 = "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";
+document.getElementById("dl-xlsx").addEventListener("click", () => {
+  const bin = atob(XLSX_B64);
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  const blob = new Blob([bytes], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ASTS_Valuation_Model.xlsx";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+/* ---------------- main render ---------------- */
+function renderAll(){
+  syncBubbles();
+  const m = model(S);
+  // live share-count readouts under the Dilution sliders
+  document.getElementById("note-dilution").textContent =
+    `+${fN(CONVERT_SHARES*S.dilution/100,1)}M of the ${fN(CONVERT_SHARES,1)}M potential convert shares → ${fN(m.effSh,0)}M effective shares`;
+  document.getElementById("note-futdil").textContent =
+    `+${fN(S.shares*S.futdil/100,1)}M assumed from future raises / stock comp, on top of the converts`;
+  if (!views.console.hidden){
+    renderKPIs(m); renderLenses(m); renderWaterfall(m); renderConstel(m);
+    renderCoverage(); renderAdoption(); renderSanity(m); renderBars(m); renderCurve(); renderStages();
+  }
+  renderFinance();
+  renderUnderwriting(m);
+  renderSheetInputs(); renderSheetModel(m); renderSheetStages();
+}
+renderAll();
+addEventListener("resize", renderAll);
+// browsers that restore form values after reload fire stray input events that
+// would desync sliders from state — a reload always starts clean at defaults
+addEventListener("pageshow", () => {
+  Object.assign(S, DEF); Object.assign(F, FDEF);
+  for (const k in sliders) sliders[k].value = (k in S) ? S[k] : F[k];
+  renderAll();
+});
+</script>
