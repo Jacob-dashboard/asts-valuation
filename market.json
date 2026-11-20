@@ -1,1 +1,1 @@
-{"px": 25.49, "mcap": 9.89, "date": "2026-11-19", "source": "cboe delayed quote via GitHub Action", "shares_note": "mcap = px x 388.12M shares (Jul 2026 count)"}
+{"px": 25.55, "mcap": 9.92, "date": "2026-11-20", "source": "yahoo chart api via GitHub Action", "shares_note": "mcap = px x 388.12M shares (Jul 2026 count)"}
